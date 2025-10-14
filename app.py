@@ -158,9 +158,19 @@ def account_page():
 # ------------------------------
 def admin_dashboard():
     st.markdown("<h2>🧭 لوحة التحكم الإدارية</h2>", unsafe_allow_html=True)
-    
+
+    # تحويل السجلات إلى DataFrame
+    df = pd.DataFrame(LOGS)
+
+    # في حال لا توجد سجلات
+    if df.empty:
+        st.info("لا توجد بيانات بعد.")
+        return
+
+    # عرض كل المستخدمين (حتى بدون نشاط)
     users = list(USERS.keys())
     table = []
+
     for u in users:
         user_df = df[df["user"] == u]
         if not user_df.empty:
@@ -180,14 +190,24 @@ def admin_dashboard():
 
     st.dataframe(pd.DataFrame(table), use_container_width=True)
 
-    # إرسال توجيه
-    st.markdown("---")
-    st.subheader("✉️ إرسال توجيه لمستخدم:")
-    target = st.selectbox("اختر المستخدم:", users)
-    message = st.text_area("نص التوجيه:")
+    # 🔹 قسم إرسال التوجيهات
+    st.subheader("💬 إرسال توجيه لمستخدم:")
+    selected_user = st.selectbox("اختر المستخدم:", users)
+    note = st.text_area("اكتب التوجيه هنا:")
+
     if st.button("📤 إرسال التوجيه"):
-        save_admin_message(target, message)
-        st.success(f"✅ تم إرسال التوجيه إلى {target}")
+        if note.strip():
+            LOGS.append({
+                "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "user": selected_user,
+                "status": "رسالة من الأدمن",
+                "note": note
+            })
+            with open("user_logs.json", "w", encoding="utf-8") as f:
+                json.dump(LOGS, f, ensure_ascii=False, indent=2)
+            st.success(f"✅ تم إرسال التوجيه إلى {selected_user}")
+        else:
+            st.warning("⚠️ يرجى كتابة التوجيه قبل الإرسال.")
 
 # ------------------------------
 # 💬 حفظ رسائل الأدمن
@@ -241,6 +261,7 @@ else:
     elif page == "generator": generator()
     elif page == "account": account_page()
     elif page == "admin" and st.session_state.role == "admin": admin_dashboard()
+
 
 
 
