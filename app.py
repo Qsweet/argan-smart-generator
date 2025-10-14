@@ -86,7 +86,11 @@ def generator():
         gift = st.selectbox("🎁 الهدية:", OPTIONS["gift"])
         cashback = st.selectbox("💸 الكاش باك:", OPTIONS["cashback"])
         tone = st.selectbox("🎤 نبرة النص:", OPTIONS["tone"])
-
+        sfda_compliance = st.radio(
+    "📜 هل تريد أن يكون السيناريو خاضعًا لاشتراطات هيئة الغذاء والدواء السعودية؟",
+    ["لا", "نعم"],
+    horizontal=True
+)
     inst = st.text_area("📝 تعليمات إضافية:")
 
     if st.button("✨ توليد النص", use_container_width=True):
@@ -261,6 +265,7 @@ else:
     elif page == "generator": generator()
     elif page == "account": account_page()
     elif page == "admin" and st.session_state.role == "admin": admin_dashboard()
+
 
 
 
