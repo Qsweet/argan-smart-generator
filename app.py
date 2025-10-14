@@ -1,7 +1,8 @@
 # ============================================
-# 🌿 Argan Package Smart Script Generator v2
+# 🌿 Argan Package Smart Script Generator v3
 # الكاتب: د. محمد القضاه
 # الوصف: نظام توليد سكربتات تسويقية باللهجة السعودية
+# الميزة: دعم تسجيل الدخول متعدد المستخدمين
 # ============================================
 
 import streamlit as st
@@ -10,13 +11,55 @@ import json
 import datetime
 
 # -----------------------------
-# 🟢 إعداد الصفحة
+# 🟢 إعداد الصفحة العامة
 # -----------------------------
 st.set_page_config(
     page_title="Argan Package Script Generator",
     page_icon="🌿",
     layout="centered"
 )
+
+# -----------------------------
+# 🔹 تحميل بيانات المستخدمين من ملف users.json
+# -----------------------------
+try:
+    with open("users.json", "r", encoding="utf-8") as f:
+        USERS = json.load(f)
+except FileNotFoundError:
+    st.error("❌ لم يتم العثور على ملف users.json. تأكد من رفعه مع التطبيق.")
+    st.stop()
+
+# -----------------------------
+# 🔑 نظام تسجيل الدخول
+# -----------------------------
+def login_screen():
+    st.title("🔒 تسجيل الدخول إلى Argan Package System")
+    st.markdown("يرجى إدخال بيانات الدخول الخاصة بك للمتابعة 👇")
+
+    username = st.text_input("👤 اسم المستخدم:")
+    password = st.text_input("🔑 كلمة المرور:", type="password")
+
+    if st.button("تسجيل الدخول"):
+        if username in USERS and USERS[username] == password:
+            st.session_state["user"] = username
+            st.success(f"مرحبًا بك يا {username} 🌿")
+            st.experimental_rerun()
+        else:
+            st.error("❌ اسم المستخدم أو كلمة المرور غير صحيحة.")
+
+# التحقق من حالة الجلسة
+if "user" not in st.session_state:
+    login_screen()
+    st.stop()
+
+# -----------------------------
+# 🧭 شريط جانبي (Sidebar)
+# -----------------------------
+st.sidebar.markdown(f"👋 **مرحبًا، {st.session_state['user']}**")
+st.sidebar.markdown("---")
+if st.sidebar.button("🚪 تسجيل الخروج"):
+    del st.session_state["user"]
+    st.experimental_rerun()
 
 # -----------------------------
 # 🔹 تحميل القوائم من ملف options.json
@@ -29,7 +72,7 @@ except FileNotFoundError:
     st.stop()
 
 # -----------------------------
-# 🔑 مفتاح OpenAI
+# 🔑 مفتاح OpenAI من Streamlit Secrets
 # -----------------------------
 try:
     openai.api_key = st.secrets["OPENAI_API_KEY"]
@@ -38,7 +81,7 @@ except Exception:
     st.stop()
 
 # -----------------------------
-# 🌿 واجهة المستخدم
+# 🌿 واجهة التطبيق
 # -----------------------------
 st.title("🌿 Argan Package Smart Script Generator")
 st.markdown("##### ✨ نظام توليد سكربتات تسويقية باللهجة السعودية 🇸🇦")
