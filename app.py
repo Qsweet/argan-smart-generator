@@ -394,8 +394,9 @@ def login_screen():
             **نظام Argan Package Smart Script Generator v5.0**
             
             - توليد سيناريوهات تسويقية ذكية
-            - إدارة الحملات الإعلانية
+            - تخطيط وإدارة الحملات
             - تتبع الأداء والإحصائيات
+            - إدارة الجرد والمخزون
             - دعم اشتراطات SFDA
             
             تم التطوير بواسطة: د. محمد القضاه
@@ -893,39 +894,121 @@ def admin_dashboard():
     st.markdown("<br>", unsafe_allow_html=True)
     st.divider()
     
-    # إدارة الحملات
-    st.markdown("### 📦 إدارة الحملات الإعلانية")
+    # إحصائيات المنتجات
+    st.markdown("إحصائيات المنتجات")
     
-    col1, col2 = st.columns(2)
+    # الجرد المحدث
+    st.markdown("الجرد المحدث")
     
-    with col1:
-        st.markdown("#### 📋 القائمة الحالية")
-        if CAMPAIGNS:
-            for idx, camp in enumerate(CAMPAIGNS):
-                col_a, col_b = st.columns([3, 1])
-                with col_a:
-                    st.text(f"{idx + 1}. {camp}")
-                with col_b:
-                    if st.button("🗑️", key=f"del_camp_{idx}"):
-                        CAMPAIGNS.pop(idx)
-                        if save_json("campaigns.json", CAMPAIGNS):
-                            st.success("✅ تم الحذف")
-                            st.rerun()
-        else:
-            st.info("لا توجد حملات بعد")
+    # رفع ملف Excel
+    uploaded_file = st.file_uploader(
+        "📄 ارفع ملف الجرد (Excel):",
+        type=["xlsx", "xls"],
+        help="ارفع ملف Excel يحتوي على بيانات الجرد",
+        key="inventory_uploader"
+    )
     
-    with col2:
-        st.markdown("#### ➕ إضافة حملة جديدة")
-        new_campaign = st.text_input("اسم الحملة:", placeholder="مثال: حملة رمضان 2025")
-        
-        if st.button("إضافة الحملة", use_container_width=True):
-            if new_campaign and new_campaign not in CAMPAIGNS:
-                CAMPAIGNS.append(new_campaign)
-                if save_json("campaigns.json", CAMPAIGNS):
-                    st.success("✅ تمت إضافة الحملة بنجاح")
-                    st.rerun()
+    if uploaded_file:
+        try:
+            # حفظ الملف
+            import os
+            os.makedirs("inventory_files", exist_ok=True)
+            
+            file_path = f"inventory_files/{uploaded_file.name}"
+            with open(file_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            
+            st.success(f"✅ تم رفع الملف: {uploaded_file.name}")
+            
+            # قراءة وعرض البيانات
+            df = pd.read_excel(file_path)
+            
+            # إحصائيات سريعة
+            st.markdown("إحصائيات الجرد")
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric("📦 إجمالي المنتجات", len(df))
+            
+            with col2:
+                if "كميته" in df.columns:
+                    total_qty = df["كميته"].sum()
+                    st.metric("📊 إجمالي الكمية", f"{total_qty:,.0f}")
+                else:
+                    st.metric("📊 إجمالي الكمية", "-")
+            
+            with col3:
+                if "كميته" in df.columns:
+                    low_stock = len(df[df["كميته"] < 100])
+                    st.metric("⚠️ منتجات قليلة المخزون", low_stock)
+                else:
+                    st.metric("⚠️ منتجات قليلة المخزون", "-")
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # عرض الجدول
+            st.markdown("جدول الجرد الكامل")
+            
+            # تنسيق الجدول
+            if "كميته" in df.columns:
+                # تلوين الصفوف حسب الكمية
+                def highlight_low_stock(row):
+                    if row["كميته"] < 100:
+                        return ['background-color: #fff3cd'] * len(row)
+                    elif row["كميته"] < 500:
+                        return ['background-color: #d1ecf1'] * len(row)
+                    else:
+                        return ['background-color: #d4edda'] * len(row)
+                
+                styled_df = df.style.apply(highlight_low_stock, axis=1)
+                st.dataframe(styled_df, use_container_width=True, height=400)
             else:
-                st.warning("⚠️ الحملة موجودة مسبقًا أو الاسم فارغ")
+                st.dataframe(df, use_container_width=True, height=400)
+            
+            # ملاحظة
+            st.info("""
+                💡 **ملاحظة:** 
+                - 🟡 **أخضر**: مخزون جيد (500+)
+                - 🔵 **أزرق**: مخزون متوسط (100-499)
+                - 🟠 **أصفر**: مخزون قليل (<100)
+            """)
+            
+            # حفظ مسار الملف للاستخدام اللاحق
+            st.session_state.current_inventory_file = file_path
+            
+        except Exception as e:
+            st.error(f"❌ خطأ في قراءة الملف: {str(e)}")
+    
+    # عرض آخر ملف محفوظ
+    elif os.path.exists("inventory_files"):
+        files = [f for f in os.listdir("inventory_files") if f.endswith(('.xlsx', '.xls'))]
+        if files:
+            latest_file = max([f"inventory_files/{f}" for f in files], key=os.path.getmtime)
+            
+            st.info(f"📁 آخر ملف محفوظ: {os.path.basename(latest_file)}")
+            
+            if st.button("👁️ عرض الملف المحفوظ", use_container_width=True):
+                try:
+                    df = pd.read_excel(latest_file)
+                    
+                    # إحصائيات
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("📦 إجمالي المنتجات", len(df))
+                    with col2:
+                        if "كميته" in df.columns:
+                            st.metric("📊 إجمالي الكمية", f"{df['كميته'].sum():,.0f}")
+                    with col3:
+                        if "كميته" in df.columns:
+                            st.metric("⚠️ منتجات قليلة", len(df[df["كميته"] < 100]))
+                    
+                    st.dataframe(df, use_container_width=True, height=400)
+                except Exception as e:
+                    st.error(f"❌ خطأ: {str(e)}")
+        else:
+            st.warning("⚠️ لا توجد ملفات جرد محفوظة")
+    else:
+        st.warning("⚠️ لم يتم رفع أي ملف جرد بعد. ارفع ملف Excel للبدء.")
 
 # ============================================
 # 📅 صفحة تخطيط الحملات (محسّنة ومتقدمة v5.1)
