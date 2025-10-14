@@ -1,7 +1,7 @@
 # ============================================
-# 🌿 Argan Package Smart Script Generator v4.1
+# 🌿 Argan Package Smart Script Generator v4.2
 # المطور: د. محمد القضاه
-# الوصف: تمت إضافة خاصية الامتثال لاشتراطات هيئة الغذاء والدواء السعودية (SFDA)
+# الوصف: تم إضافة إدارة الحملات (Campaigns) + خيارات الحذف والتصنيف للمستخدم
 # تاريخ التعديل: 2025-10-14
 # ============================================
 
@@ -27,6 +27,7 @@ def load_json(path):
 USERS = load_json("users.json")
 OPTIONS = load_json("options.json")
 LOGS = load_json("user_logs.json")
+CAMPAIGNS = load_json("campaigns.json")  # ✅ ملف الحملات الجديد
 
 # مفتاح OpenAI
 openai.api_key = st.secrets["OPENAI_API_KEY"]
@@ -88,7 +89,6 @@ def generator():
         cashback = st.selectbox("💸 الكاش باك:", OPTIONS["cashback"])
         tone = st.selectbox("🎤 نبرة النص:", OPTIONS["tone"])
     
-    # ✅ خيار الالتزام بلوائح هيئة الغذاء والدواء السعودية
     sfda_compliance = st.radio(
         "📜 هل تريد أن يكون السيناريو خاضعًا لاشتراطات هيئة الغذاء والدواء السعودية؟",
         ["لا", "نعم"],
@@ -99,8 +99,6 @@ def generator():
 
     if st.button("✨ توليد النص", use_container_width=True):
         with st.spinner("جارٍ توليد النص..."):
-            
-            # 💡 قواعد SFDA في حال اختار المستخدم "نعم"
             if sfda_compliance == "نعم":
                 sfda_rules = """
                 ✅ طبق اشتراطات هيئة الغذاء والدواء السعودية (SFDA):
@@ -115,7 +113,6 @@ def generator():
             else:
                 sfda_rules = ""
 
-            # 🔹 البرومت النهائي الذكي
             prompt = f"""
 اكتب سكربت باللهجة السعودية لمنتج {product} على منصة {platform}.
 السيناريو: {scenario}. النبرة: {tone}.
@@ -123,7 +120,6 @@ def generator():
 تعليمات إضافية: {inst}.
 {sfda_rules}
 """
-
             try:
                 response = openai.chat.completions.create(
                     model="gpt-4o-mini",
@@ -150,7 +146,8 @@ def save_log(user, product, scenario, platform):
         "platform": platform,
         "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "status": "جديد",
-        "note": ""
+        "note": "",
+        "campaign": "لا توجد حملة"  # ✅ جديد
     })
     with open("user_logs.json", "w", encoding="utf-8") as f:
         json.dump(LOGS, f, ensure_ascii=False, indent=2)
@@ -176,6 +173,34 @@ def account_page():
 
     df = pd.DataFrame(user_logs)
     st.dataframe(df, use_container_width=True)
+
+    st.markdown("---")
+    st.subheader("🧭 إدارة السكربتات:")
+
+    for i, row in enumerate(user_logs):
+        with st.expander(f"🎬 {row['product']} | {row['scenario']} | {row['timestamp']}"):
+            col1, col2 = st.columns([2, 1])
+
+            with col1:
+                selected_campaign = st.selectbox(
+                    "اختر الحملة الإعلانية:",
+                    ["لا توجد حملة"] + CAMPAIGNS,
+                    index=(["لا توجد حملة"] + CAMPAIGNS).index(row.get("campaign", "لا توجد حملة")),
+                    key=f"campaign_{i}"
+                )
+                if st.button(f"💾 حفظ التعديل #{i}"):
+                    LOGS[i]["campaign"] = selected_campaign
+                    with open("user_logs.json", "w", encoding="utf-8") as f:
+                        json.dump(LOGS, f, ensure_ascii=False, indent=2)
+                    st.success("✅ تم حفظ التعديل بنجاح.")
+
+            with col2:
+                if st.button(f"🗑️ حذف هذا السكربت #{i}"):
+                    LOGS.remove(row)
+                    with open("user_logs.json", "w", encoding="utf-8") as f:
+                        json.dump(LOGS, f, ensure_ascii=False, indent=2)
+                    st.warning("🚮 تم حذف هذا السكربت.")
+                    st.rerun()
 
 # ------------------------------
 # 🧭 لوحة التحكم الإدارية
@@ -227,6 +252,37 @@ def admin_dashboard():
             st.success(f"✅ تم إرسال التوجيه إلى {selected_user}")
         else:
             st.warning("⚠️ يرجى كتابة التوجيه قبل الإرسال.")
+
+    # ------------------------------
+    # 🧩 إدارة الحملات
+    # ------------------------------
+    st.markdown("---")
+    st.subheader("📦 إدارة الحملات الإعلانية:")
+
+    st.write("القائمة الحالية:")
+    if CAMPAIGNS:
+        st.table(pd.DataFrame(CAMPAIGNS, columns=["اسم الحملة"]))
+    else:
+        st.info("لا توجد حملات بعد.")
+
+    new_campaign = st.text_input("➕ إضافة حملة جديدة:")
+    if st.button("إضافة الحملة"):
+        if new_campaign and new_campaign not in CAMPAIGNS:
+            CAMPAIGNS.append(new_campaign)
+            with open("campaigns.json", "w", encoding="utf-8") as f:
+                json.dump(CAMPAIGNS, f, ensure_ascii=False, indent=2)
+            st.success("✅ تمت إضافة الحملة بنجاح.")
+        else:
+            st.warning("⚠️ الحملة موجودة مسبقًا أو الاسم فارغ.")
+
+    if st.button("🗑️ حذف آخر حملة"):
+        if CAMPAIGNS:
+            removed = CAMPAIGNS.pop()
+            with open("campaigns.json", "w", encoding="utf-8") as f:
+                json.dump(CAMPAIGNS, f, ensure_ascii=False, indent=2)
+            st.error(f"🚮 تم حذف الحملة: {removed}")
+        else:
+            st.info("لا توجد حملات لحذفها.")
 
 # ------------------------------
 # 🚪 تسجيل الخروج
