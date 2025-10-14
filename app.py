@@ -284,6 +284,144 @@ def admin_dashboard():
         else:
             st.info("لا توجد حملات لحذفها.")
 
+
+# ------------------------------
+# 🗓️ صفحة تخطيط حملة جديدة (للمشرفين فقط)
+# ------------------------------
+# ------------------------------
+# 🗓️ صفحة تخطيط حملة جديدة (للمشرفين فقط)
+# ------------------------------
+def plan_campaign():
+    st.markdown("<h2>🗓️ تخطيط حملة جديدة</h2>", unsafe_allow_html=True)
+
+    # تحميل الحملات الحالية من الملف
+    try:
+        with open("campaign_plans.json", "r", encoding="utf-8") as f:
+            campaigns = json.load(f)
+    except FileNotFoundError:
+        campaigns = []
+
+    # ✅ إدخال بيانات حملة جديدة
+    st.subheader("➕ إنشاء حملة جديدة")
+    campaign_name = st.text_input("اسم الحملة:")
+    col1, col2 = st.columns(2)
+    with col1:
+        start_date = st.date_input("تاريخ البداية:")
+    with col2:
+        end_date = st.date_input("تاريخ النهاية:")
+
+    if st.button("✅ إنشاء الحملة", use_container_width=True):
+        if campaign_name.strip():
+            new_campaign = {
+                "campaign_name": campaign_name.strip(),
+                "start_date": str(start_date),
+                "end_date": str(end_date),
+                "created_by": st.session_state.user,
+                "created_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "updates": [],
+                "products": []  # ✅ جدول المنتجات داخل الحملة
+            }
+            campaigns.append(new_campaign)
+            with open("campaign_plans.json", "w", encoding="utf-8") as f:
+                json.dump(campaigns, f, ensure_ascii=False, indent=2)
+            st.success(f"✅ تم إنشاء الحملة الجديدة: {campaign_name}")
+            st.rerun()
+        else:
+            st.warning("⚠️ يرجى إدخال اسم الحملة أولاً.")
+
+    st.markdown("---")
+    st.subheader("📋 الحملات الحالية")
+
+    # ✅ عرض الحملات
+    if not campaigns:
+        st.info("لا توجد حملات حالياً.")
+        return
+
+    for i, camp in enumerate(campaigns):
+        with st.expander(f"📦 {camp['campaign_name']} | من {camp['start_date']} إلى {camp['end_date']}"):
+            st.write(f"تم إنشاؤها بواسطة: **{camp['created_by']}** بتاريخ **{camp['created_at']}**")
+            st.divider()
+
+            # ✅ سجل التحديثات
+            st.subheader("🧾 سجل التحديثات")
+            if camp["updates"]:
+                for u in camp["updates"]:
+                    st.markdown(f"- 🕓 {u['time']} | {u['user']}: {u['action']}")
+            else:
+                st.info("لا توجد تحديثات بعد.")
+
+            update_note = st.text_area(f"إضافة تحديث جديد للحملة:", key=f"update_{i}")
+            if st.button(f"💾 حفظ التحديث #{i}"):
+                if update_note.strip():
+                    camp["updates"].append({
+                        "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "user": st.session_state.user,
+                        "action": update_note.strip()
+                    })
+                    with open("campaign_plans.json", "w", encoding="utf-8") as f:
+                        json.dump(campaigns, f, ensure_ascii=False, indent=2)
+                    st.success("✅ تم حفظ التحديث.")
+                    st.rerun()
+                else:
+                    st.warning("⚠️ اكتب ملاحظة قبل الحفظ.")
+
+            st.divider()
+
+            # ✅ جدول إدارة المنتجات داخل الحملة
+            st.subheader("📦 إدارة منتجات الحملة")
+
+            if "products" not in camp:
+                camp["products"] = []
+
+            df = pd.DataFrame(camp["products"], columns=[
+                "المنتج", "السعر الحالي", "السعر بعد الخصم", "العرض", "المنصة", "الحالة", "ملاحظات"
+            ]) if camp["products"] else pd.DataFrame(columns=[
+                "المنتج", "السعر الحالي", "السعر بعد الخصم", "العرض", "المنصة", "الحالة", "ملاحظات"
+            ])
+
+            st.dataframe(df, use_container_width=True)
+
+            with st.form(f"add_product_form_{i}", clear_on_submit=True):
+                st.write("إضافة منتج جديد إلى الحملة:")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    prod_name = st.text_input("اسم المنتج:")
+                    platform = st.selectbox("المنصة:", ["Snapchat", "TikTok", "Meta", "Google"])
+                with col2:
+                    price_now = st.number_input("السعر الحالي:", min_value=0.0)
+                    price_new = st.number_input("السعر بعد الخصم:", min_value=0.0)
+                with col3:
+                    offer = st.text_input("العرض الترويجي:")
+                    status = st.selectbox("الحالة:", ["نشط", "متوقف", "قيد المراجعة"])
+                notes = st.text_area("ملاحظات إضافية:")
+
+                submitted = st.form_submit_button("➕ إضافة المنتج")
+                if submitted:
+                    new_prod = {
+                        "المنتج": prod_name,
+                        "السعر الحالي": price_now,
+                        "السعر بعد الخصم": price_new,
+                        "العرض": offer,
+                        "المنصة": platform,
+                        "الحالة": status,
+                        "ملاحظات": notes
+                    }
+                    camp["products"].append(new_prod)
+                    with open("campaign_plans.json", "w", encoding="utf-8") as f:
+                        json.dump(campaigns, f, ensure_ascii=False, indent=2)
+                    st.success("✅ تم إضافة المنتج إلى الحملة.")
+                    st.rerun()
+
+            # ✅ حذف الحملة بالكامل
+            st.divider()
+            if st.button(f"🗑️ حذف الحملة بالكامل #{i}", type="secondary"):
+                campaigns.pop(i)
+                with open("campaign_plans.json", "w", encoding="utf-8") as f:
+                    json.dump(campaigns, f, ensure_ascii=False, indent=2)
+                st.error("🚮 تم حذف الحملة بنجاح.")
+                st.rerun()
+
+
 # ------------------------------
 # 🚪 تسجيل الخروج
 # ------------------------------
@@ -325,6 +463,7 @@ else:
     elif page == "admin" and st.session_state.role == "admin": admin_dashboard()
     elif page == "plan_campaign" and st.session_state.role == "admin":
         plan_campaign()
+
 
 
 
