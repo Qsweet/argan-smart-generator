@@ -1,0 +1,159 @@
+# ------------------------------
+# 📅 صفحة تخطيط حملة جديدة
+# ------------------------------
+def plan_campaign():
+    st.markdown("<h2>📅 تخطيط حملة جديدة</h2>", unsafe_allow_html=True)
+
+    # تحميل بيانات الحملات القديمة إن وُجدت
+    try:
+        with open("campaign_plans.json", "r", encoding="utf-8") as f:
+            campaigns = json.load(f)
+    except FileNotFoundError:
+        campaigns = []
+
+    # تحميل سجل التعديلات
+    try:
+        with open("campaign_logs.json", "r", encoding="utf-8") as f:
+            campaign_logs = json.load(f)
+    except FileNotFoundError:
+        campaign_logs = []
+
+    # إنشاء أو اختيار حملة
+    st.subheader("إدارة الحملات")
+    campaign_names = [c["name"] for c in campaigns]
+    campaign_action = st.radio("اختر الإجراء:", ["إنشاء حملة جديدة", "تعديل حملة موجودة"], horizontal=True)
+
+    if campaign_action == "إنشاء حملة جديدة":
+        name = st.text_input("اسم الحملة:")
+        col1, col2 = st.columns(2)
+        with col1:
+            start_date = st.date_input("تاريخ البداية")
+        with col2:
+            end_date = st.date_input("تاريخ النهاية")
+        campaign_type = st.selectbox("نوع الحملة:", ["عروض موسمية", "عروض جديدة", "رمضان", "الجمعة البيضاء", "نهاية العام"])
+        target_market = st.text_input("السوق المستهدف (مثلاً: السعودية، الكويت...)")
+        goal = st.text_area("الهدف من الحملة:")
+
+        if st.button("💾 إنشاء الحملة", use_container_width=True):
+            if name:
+                new_campaign = {
+                    "name": name,
+                    "created_by": st.session_state.user,
+                    "created_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "start_date": str(start_date),
+                    "end_date": str(end_date),
+                    "type": campaign_type,
+                    "market": target_market,
+                    "goal": goal,
+                    "products": []
+                }
+                campaigns.append(new_campaign)
+                with open("campaign_plans.json", "w", encoding="utf-8") as f:
+                    json.dump(campaigns, f, ensure_ascii=False, indent=2)
+
+                # سجل التعديل
+                campaign_logs.append({
+                    "campaign": name,
+                    "user": st.session_state.user,
+                    "action": "إنشاء حملة جديدة",
+                    "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "details": f"تم إنشاء حملة جديدة باسم {name}"
+                })
+                with open("campaign_logs.json", "w", encoding="utf-8") as f:
+                    json.dump(campaign_logs, f, ensure_ascii=False, indent=2)
+                st.success(f"تم إنشاء الحملة ({name}) بنجاح ✅")
+                st.rerun()
+            else:
+                st.warning("يرجى إدخال اسم الحملة قبل الحفظ.")
+
+    elif campaign_action == "تعديل حملة موجودة":
+        if not campaign_names:
+            st.info("لا توجد حملات حالياً.")
+            return
+        selected_campaign = st.selectbox("اختر الحملة لتعديلها:", campaign_names)
+        campaign = next(c for c in campaigns if c["name"] == selected_campaign)
+
+        # عرض بيانات الحملة الحالية
+        st.subheader("تفاصيل الحملة الحالية")
+        st.write(f"تم إنشاؤها بواسطة: {campaign['created_by']} بتاريخ {campaign['created_at']}")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            campaign["start_date"] = st.date_input("تاريخ البداية", datetime.datetime.strptime(campaign["start_date"], "%Y-%m-%d").date())
+        with col2:
+            campaign["end_date"] = st.date_input("تاريخ النهاية", datetime.datetime.strptime(campaign["end_date"], "%Y-%m-%d").date())
+        campaign["goal"] = st.text_area("الهدف من الحملة:", campaign["goal"])
+        campaign["market"] = st.text_input("السوق المستهدف:", campaign["market"])
+        campaign["type"] = st.selectbox("نوع الحملة:", ["عروض موسمية", "عروض جديدة", "رمضان", "الجمعة البيضاء", "نهاية العام"], index=["عروض موسمية", "عروض جديدة", "رمضان", "الجمعة البيضاء", "نهاية العام"].index(campaign["type"]))
+
+        st.markdown("---")
+        st.subheader("المنتجات المشاركة في الحملة")
+
+        # جدول المنتجات الحالية
+        if campaign["products"]:
+            for i, p in enumerate(campaign["products"]):
+                with st.expander(f"المنتج {i+1}: {p['name']}"):
+                    p["name"] = st.text_input(f"اسم المنتج {i+1}:", value=p["name"], key=f"name_{i}")
+                    p["offer"] = st.text_input(f"العرض {i+1}:", value=p["offer"], key=f"offer_{i}")
+                    p["price_before"] = st.number_input(f"السعر قبل الخصم {i+1}:", value=p["price_before"], key=f"before_{i}")
+                    p["price_after"] = st.number_input(f"السعر بعد الخصم {i+1}:", value=p["price_after"], key=f"after_{i}")
+                    p["platform"] = st.selectbox(f"المنصة {i+1}:", ["Snapchat", "TikTok", "Meta"], key=f"platform_{i}")
+                    p["status"] = st.selectbox(f"الحالة {i+1}:", ["نشط", "موقوف"], key=f"status_{i}")
+                    if st.button(f"🗑️ حذف المنتج {i+1}", key=f"delete_{i}"):
+                        campaign["products"].pop(i)
+                        st.experimental_rerun()
+
+        # إضافة منتج جديد
+        with st.expander("➕ إضافة منتج جديد"):
+            new_name = st.text_input("اسم المنتج:")
+            new_offer = st.text_input("نوع العرض:")
+            new_price_before = st.number_input("السعر قبل الخصم:", 0)
+            new_price_after = st.number_input("السعر بعد الخصم:", 0)
+            new_platform = st.selectbox("المنصة:", ["Snapchat", "TikTok", "Meta"])
+            if st.button("إضافة المنتج"):
+                campaign["products"].append({
+                    "name": new_name,
+                    "offer": new_offer,
+                    "price_before": new_price_before,
+                    "price_after": new_price_after,
+                    "platform": new_platform,
+                    "status": "نشط"
+                })
+                campaign_logs.append({
+                    "campaign": selected_campaign,
+                    "user": st.session_state.user,
+                    "action": "إضافة منتج",
+                    "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "details": f"تمت إضافة المنتج {new_name}"
+                })
+                with open("campaign_logs.json", "w", encoding="utf-8") as f:
+                    json.dump(campaign_logs, f, ensure_ascii=False, indent=2)
+                st.success("تمت إضافة المنتج بنجاح ✅")
+                st.rerun()
+
+        if st.button("💾 حفظ التعديلات", use_container_width=True):
+            for i, c in enumerate(campaigns):
+                if c["name"] == selected_campaign:
+                    campaigns[i] = campaign
+            with open("campaign_plans.json", "w", encoding="utf-8") as f:
+                json.dump(campaigns, f, ensure_ascii=False, indent=2)
+
+            campaign_logs.append({
+                "campaign": selected_campaign,
+                "user": st.session_state.user,
+                "action": "تعديل بيانات الحملة",
+                "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "details": "تم تعديل بيانات الحملة ومحتواها"
+            })
+            with open("campaign_logs.json", "w", encoding="utf-8") as f:
+                json.dump(campaign_logs, f, ensure_ascii=False, indent=2)
+            st.success("تم حفظ التعديلات بنجاح ✅")
+
+        # عرض سجل التعديلات
+        st.markdown("---")
+        st.subheader("سجل التعديلات")
+        log_df = pd.DataFrame([l for l in campaign_logs if l["campaign"] == selected_campaign])
+        if not log_df.empty:
+            st.dataframe(log_df[["timestamp", "user", "action", "details"]], use_container_width=True)
+        else:
+            st.info("لا توجد تعديلات بعد.")
