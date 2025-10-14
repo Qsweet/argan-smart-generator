@@ -1,11 +1,12 @@
 # ============================================
-# 🌿 Argan Package Smart Script Generator v1
+# 🌿 Argan Package Smart Script Generator v1 (محدّث لمكتبة openai>=1.0.0)
 # الكاتب: د. محمد القضاه
 # الوصف: تطبيق توليد سكربتات تسويقية باللهجة السعودية
+# ملاحظة: تأكد من وضع OPENAI_API_KEY في Streamlit Secrets
 # ============================================
 
 import streamlit as st
-import openai
+from openai import OpenAI
 import datetime
 
 # إعداد الواجهة
@@ -15,13 +16,22 @@ st.set_page_config(
     layout="centered"
 )
 
-# ترويسة الصفحة
 st.title("🌿 Argan Package Smart Script Generator")
 st.markdown("##### ✨ نظام توليد سكربتات تسويقية باللهجة السعودية 🇸🇦")
 st.markdown("---")
 
-# إدخال مفاتيح API (تكون موجودة في secrets على Streamlit Cloud)
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+# جلب مفتاح OpenAI من Secrets (Streamlit Cloud)
+try:
+    OPENAI_KEY = st.secrets["OPENAI_API_KEY"]
+except Exception:
+    OPENAI_KEY = None
+
+if not OPENAI_KEY:
+    st.error("⚠️ لم يتم إعداد مفتاح OpenAI في إعدادات التطبيق (Settings → Secrets). أضف OPENAI_API_KEY ثم أعد تحميل الصفحة.")
+    st.stop()
+
+# تهيئة عميل OpenAI (الإصدار 1.0+)
+client = OpenAI(api_key=OPENAI_KEY)
 
 # واجهة الإدخال
 col1, col2 = st.columns(2)
@@ -43,11 +53,12 @@ st.markdown("---")
 
 # زر التنفيذ
 if st.button("🧠 توليد السكربت الآن"):
+    # التحقق من الحقول الإلزامية
     if not all([offer, product, platform, scenario, shipping, gift, custom_inst]):
         st.error("⚠️ الرجاء تعبئة جميع الحقول المطلوبة قبل التوليد.")
     else:
         with st.spinner("⚙️ جاري إنشاء السكربت..."):
-            # إنشاء البرومت الذكي
+            # بناء الـ prompt
             prompt = f"""
 اكتب سكربت تسويقي باللهجة السعودية لمنتج "{product}" مناسب لمنصة {platform}.
 نوع السيناريو: {scenario}.
@@ -67,29 +78,42 @@ if st.button("🧠 توليد السكربت الآن"):
 - ختام بدعوة للفعل مناسبة للمنصة ({platform}).
 - اجعل السكربت مختلف عن أي سكربت عام أو نمطي.
 """
-
-            # استدعاء OpenAI
             try:
-                res = openai.ChatCompletion.create(
+                # استدعاء واجهة Chat Completions بالطريقة الجديدة (openai>=1.0.0)
+                response = client.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=[
                         {"role": "system", "content": "أنت كاتب محتوى تسويقي سعودي محترف متخصص في سناب شات وتيك توك ومتابع لسياسات المنصات."},
                         {"role": "user", "content": prompt}
-                    ]
+                    ],
+                    temperature=0.95,
+                    max_tokens=700
                 )
-                script = res.choices[0].message.content.strip()
+
+                # الحصول على النص من الاستجابة
+                # في بعض إصدارات المكتبة صيغة الوصول قد تكون slightly different،
+                # لكن عادة يمكن الوصول كما يلي:
+                script = ""
+                try:
+                    # محاولة الوصول بالطريقة الكائنية
+                    script = response.choices[0].message.content.strip()
+                except Exception:
+                    # fallback: محاولة شكل dict-like
+                    script = response["choices"][0]["message"]["content"].strip()
 
                 # عرض النتيجة
                 st.success("✅ تم توليد السكربت بنجاح!")
                 st.markdown(f"### 🧾 السكربت الناتج:")
                 st.text_area("📜 النص النهائي:", script, height=300)
-                
+
                 # أزرار النسخ والتنزيل
                 st.download_button("📥 تحميل النص كملف TXT", data=script, file_name=f"{product}_script.txt")
 
                 # توقيع
                 st.markdown("---")
                 st.caption(f"تم إعداد هذا النظام بواسطة محمد القضاه • Argan Package • {datetime.datetime.now().strftime('%Y/%m/%d %H:%M')}")
-            
+
             except Exception as e:
-                st.error(f"❌ حدث خطأ أثناء الاتصال بـ OpenAI: {e}")
+                # عرض الخطأ بطريقة ودّية مع نص الخطأ الفني للdebug
+                st.error("❌ حدث خطأ أثناء الاتصال بـ OpenAI. تحقق من مفتاح OPENAI_API_KEY وإعداداتك.")
+                st.exception(e)
