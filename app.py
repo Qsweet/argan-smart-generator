@@ -137,7 +137,14 @@ def home():
         </div>
         """, unsafe_allow_html=True)
     st.markdown("---")
-    st.page_link("generator", label="🚀 إنتاج السيناريوهات")
+
+    st.markdown("<h3 style='text-align:center;'>اختر ما ترغب بالقيام به 👇</h3>", unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        if st.button("🚀 الدخول إلى إنتاج السيناريوهات", use_container_width=True):
+            st.session_state.page = "generator"
+            st.rerun()
 
 # ==============================
 # 🚪 تسجيل الخروج
@@ -172,3 +179,4 @@ else:
         admin_dashboard()
     elif page == "🚪 تسجيل الخروج":
         logout()
+
