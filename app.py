@@ -43,7 +43,7 @@ def login_screen():
         if username in USERS and USERS[username] == password:
             st.session_state["user"] = username
             st.success(f"مرحبًا بك يا {username} 🌿")
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("❌ اسم المستخدم أو كلمة المرور غير صحيحة.")
 
@@ -59,7 +59,7 @@ st.sidebar.markdown(f"👋 **مرحبًا، {st.session_state['user']}**")
 st.sidebar.markdown("---")
 if st.sidebar.button("🚪 تسجيل الخروج"):
     del st.session_state["user"]
-    st.experimental_rerun()
+    st.rerun()
 
 # -----------------------------
 # 🔹 تحميل القوائم من ملف options.json
@@ -174,3 +174,4 @@ if st.button("🚀 توليد السكربت الآن"):
 
             except Exception as e:
                 st.error(f"❌ حدث خطأ أثناء الاتصال بـ OpenAI:\n\n{e}")
+
