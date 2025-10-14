@@ -286,154 +286,173 @@ def admin_dashboard():
 
 
 # ------------------------------
-# 🗓️ صفحة تخطيط حملة جديدة (للمشرفين فقط)
+# 🗓️ صفحة تخطيط حملة جديدة (احترافية)
 # ------------------------------
 def plan_campaign():
-    st.markdown("<h2>🗓️ تخطيط حملة جديدة</h2>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align:center;'>🎯 تخطيط حملة تسويقية احترافية</h1>", unsafe_allow_html=True)
+    st.divider()
 
-    # تحميل الحملات الحالية من الملف
+    # تحميل البيانات
     try:
         with open("campaign_plans.json", "r", encoding="utf-8") as f:
             campaigns = json.load(f)
     except FileNotFoundError:
         campaigns = []
 
-    # تحميل قائمة المنتجات من options.json
-    products_list = OPTIONS.get("product", [])
+    product_list = OPTIONS.get("product", [])
+    employee_users = [u for u, d in USERS.items() if d["role"] == "user"]
 
-    # ✅ إنشاء حملة جديدة
-    st.subheader("➕ إنشاء حملة جديدة")
-    campaign_name = st.text_input("اسم الحملة:")
-    col1, col2 = st.columns(2)
-    with col1:
-        start_date = st.date_input("تاريخ البداية:")
-    with col2:
-        end_date = st.date_input("تاريخ النهاية:")
+    # إنشاء حملة جديدة
+    with st.expander("➕ إنشاء حملة جديدة", expanded=False):
+        col1, col2 = st.columns(2)
+        with col1:
+            campaign_name = st.text_input("اسم الحملة:")
+        with col2:
+            col_a, col_b = st.columns(2)
+            with col_a:
+                start_date = st.date_input("تاريخ البداية:")
+            with col_b:
+                end_date = st.date_input("تاريخ النهاية:")
 
-    if st.button("✅ إنشاء الحملة", use_container_width=True):
-        if campaign_name.strip():
-            new_campaign = {
-                "campaign_name": campaign_name.strip(),
-                "start_date": str(start_date),
-                "end_date": str(end_date),
-                "created_by": st.session_state.user,
-                "created_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "updates": [],
-                "products": []  # جدول المنتجات داخل الحملة
-            }
-            campaigns.append(new_campaign)
-            with open("campaign_plans.json", "w", encoding="utf-8") as f:
-                json.dump(campaigns, f, ensure_ascii=False, indent=2)
-            st.success(f"✅ تم إنشاء الحملة الجديدة: {campaign_name}")
-            st.rerun()
-        else:
-            st.warning("⚠️ يرجى إدخال اسم الحملة أولاً.")
+        if st.button("✅ إنشاء الحملة", use_container_width=True):
+            if campaign_name.strip():
+                new_campaign = {
+                    "campaign_name": campaign_name,
+                    "start_date": str(start_date),
+                    "end_date": str(end_date),
+                    "created_by": st.session_state.user,
+                    "created_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "products": []
+                }
+                campaigns.append(new_campaign)
+                with open("campaign_plans.json", "w", encoding="utf-8") as f:
+                    json.dump(campaigns, f, ensure_ascii=False, indent=2)
+                st.success(f"✅ تم إنشاء الحملة: {campaign_name}")
+                st.rerun()
 
-    st.markdown("---")
-    st.subheader("📋 الحملات الحالية")
-
-    # ✅ عرض الحملات
+    # عرض الحملات
     if not campaigns:
         st.info("لا توجد حملات حالياً.")
         return
 
     for i, camp in enumerate(campaigns):
-        with st.expander(f"📦 {camp['campaign_name']} | من {camp['start_date']} إلى {camp['end_date']}"):
-            st.write(f"تم إنشاؤها بواسطة: **{camp['created_by']}** بتاريخ **{camp['created_at']}**")
-            st.divider()
+        st.markdown(f"### 📦 {camp['campaign_name']} | من {camp['start_date']} إلى {camp['end_date']}")
+        st.caption(f"تم إنشاؤها بواسطة {camp['created_by']} بتاريخ {camp['created_at']}")
+        st.divider()
 
-            # ✅ سجل التحديثات
-            st.subheader("🧾 سجل التحديثات")
-            if camp["updates"]:
-                for u in camp["updates"]:
-                    st.markdown(f"- 🕓 {u['time']} | {u['user']}: {u['action']}")
-            else:
-                st.info("لا توجد تحديثات بعد.")
+        # 🧴 إضافة منتج جديد
+        with st.expander("➕ إضافة منتج إلى الحملة", expanded=False):
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                prod_name = st.selectbox("اسم المنتج:", product_list, key=f"prod_{i}")
+            with col2:
+                price_now = st.number_input("السعر الحالي:", min_value=0.0, key=f"price_now_{i}")
+            with col3:
+                price_new = st.number_input("السعر بعد الخصم:", min_value=0.0, key=f"price_new_{i}")
 
-            update_note = st.text_area(f"إضافة تحديث جديد للحملة:", key=f"update_{i}")
-            if st.button(f"💾 حفظ التحديث #{i}"):
-                if update_note.strip():
-                    camp["updates"].append({
-                        "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "user": st.session_state.user,
-                        "action": update_note.strip()
-                    })
-                    with open("campaign_plans.json", "w", encoding="utf-8") as f:
-                        json.dump(campaigns, f, ensure_ascii=False, indent=2)
-                    st.success("✅ تم حفظ التحديث.")
-                    st.rerun()
-                else:
-                    st.warning("⚠️ اكتب ملاحظة قبل الحفظ.")
+            col4, col5 = st.columns(2)
+            with col4:
+                discount_code = st.text_input("كود الخصم:", key=f"disc_{i}")
+            with col5:
+                status = st.selectbox("الحالة:", ["قيد التنفيذ", "جاهز", "معلق"], key=f"status_{i}")
 
-            st.divider()
+            # اختيار أنواع الفيديوهات
+            video_types = st.multiselect(
+                "أنواع الفيديوهات المطلوبة:",
+                ["توعية", "موشن", "UGC"],
+                key=f"videos_{i}"
+            )
 
-            # ✅ جدول إدارة المنتجات داخل الحملة
-            st.subheader("📦 إدارة منتجات الحملة")
+            video_counts = {}
+            if video_types:
+                st.write("🎞️ عدد الفيديوهات المطلوبة لكل نوع:")
+                for v in video_types:
+                    video_counts[v] = st.number_input(f"{v}:", min_value=0, key=f"count_{v}_{i}")
 
-            if "products" not in camp:
-                camp["products"] = []
+            assigned_to = st.selectbox("👤 الموظف المسؤول:", ["لم يتم التعيين"] + employee_users, key=f"assign_{i}")
+            notes = st.text_area("ملاحظات داخلية:", key=f"notes_{i}")
 
-            df = pd.DataFrame(camp["products"], columns=[
-                "المنتج", "السعر الحالي", "السعر بعد الخصم", "كود الخصم", "الحالة", "ملاحظات"
-            ]) if camp["products"] else pd.DataFrame(columns=[
-                "المنتج", "السعر الحالي", "السعر بعد الخصم", "كود الخصم", "الحالة", "ملاحظات"
-            ])
-
-            # ✅ واجهة تحرير مباشرة
-            edited_df = st.data_editor(df, num_rows="dynamic", use_container_width=True, key=f"edit_{i}")
-
-            # حفظ عند الضغط
-            if st.button(f"💾 حفظ التعديلات في الحملة #{i}"):
-                camp["products"] = edited_df.to_dict(orient="records")
+            if st.button("💾 إضافة المنتج للحملة", key=f"add_{i}", use_container_width=True):
+                new_prod = {
+                    "المنتج": prod_name,
+                    "السعر الحالي": price_now,
+                    "السعر بعد الخصم": price_new,
+                    "كود الخصم": discount_code,
+                    "الحالة": status,
+                    "أنواع الفيديوهات": video_types,
+                    "عدد الفيديوهات": video_counts,
+                    "الموظف المسؤول": assigned_to,
+                    "ملاحظات": notes
+                }
+                camp["products"].append(new_prod)
                 with open("campaign_plans.json", "w", encoding="utf-8") as f:
                     json.dump(campaigns, f, ensure_ascii=False, indent=2)
-                st.success("✅ تم حفظ التعديلات بنجاح.")
+                st.success("✅ تم إضافة المنتج إلى الحملة.")
                 st.rerun()
 
+        # 🎯 عرض المنتجات بشكل منظم
+        if not camp["products"]:
+            st.info("لم تتم إضافة أي منتجات بعد.")
             st.divider()
+            continue
 
-            # ✅ إضافة منتج جديد
-            with st.form(f"add_product_form_{i}", clear_on_submit=True):
-                st.write("إضافة منتج جديد إلى الحملة:")
+        st.subheader("📋 المنتجات داخل الحملة")
+        for j, p in enumerate(camp["products"]):
+            with st.container():
+                st.markdown(f"#### 🧴 {p['المنتج']}")
                 col1, col2, col3 = st.columns(3)
-                with col1:
-                    prod_name = st.selectbox("اسم المنتج:", products_list)
-                with col2:
-                    price_now = st.number_input("السعر الحالي:", min_value=0.0)
-                with col3:
-                    price_new = st.number_input("السعر بعد الخصم:", min_value=0.0)
+                col1.metric("السعر الحالي", f"{p['السعر الحالي']} ر.س")
+                col2.metric("بعد الخصم", f"{p['السعر بعد الخصم']} ر.س")
+                col3.text(f"🎟️ كود الخصم: {p['كود الخصم']}")
 
-                col4, col5 = st.columns(2)
-                with col4:
-                    discount_code = st.text_input("كود الخصم:")
-                with col5:
-                    status = st.selectbox("الحالة:", ["نشط", "متوقف", "قيد المراجعة"])
-                notes = st.text_area("ملاحظات إضافية:")
+                st.write(f"**الحالة:** {p['الحالة']}")
+                st.write(f"**الموظف المسؤول:** {p['الموظف المسؤول']}")
+                st.write(f"**أنواع الفيديوهات:** {', '.join(p['أنواع الفيديوهات']) if p['أنواع الفيديوهات'] else '—'}")
+                if p["عدد الفيديوهات"]:
+                    st.write("**تفاصيل الفيديوهات:**")
+                    for t, n in p["عدد الفيديوهات"].items():
+                        st.text(f"- {t}: {n} فيديو")
 
-                submitted = st.form_submit_button("➕ إضافة المنتج")
-                if submitted:
-                    new_prod = {
-                        "المنتج": prod_name,
-                        "السعر الحالي": price_now,
-                        "السعر بعد الخصم": price_new,
-                        "كود الخصم": discount_code,
-                        "الحالة": status,
-                        "ملاحظات": notes
-                    }
-                    camp["products"].append(new_prod)
-                    with open("campaign_plans.json", "w", encoding="utf-8") as f:
-                        json.dump(campaigns, f, ensure_ascii=False, indent=2)
-                    st.success("✅ تم إضافة المنتج إلى الحملة.")
-                    st.rerun()
+                st.write(f"**ملاحظات:** {p['ملاحظات']}")
 
-            # ✅ حذف الحملة بالكامل
-            st.divider()
-            if st.button(f"🗑️ حذف الحملة بالكامل #{i}", type="secondary"):
-                campaigns.pop(i)
-                with open("campaign_plans.json", "w", encoding="utf-8") as f:
-                    json.dump(campaigns, f, ensure_ascii=False, indent=2)
-                st.error("🚮 تم حذف الحملة بنجاح.")
-                st.rerun()
+                colx1, colx2 = st.columns(2)
+                with colx1:
+                    if st.button(f"✏️ تعديل المنتج #{j}", key=f"edit_prod_{i}_{j}"):
+                        st.warning("سيتم لاحقًا تفعيل نظام تعديل مباشر للمنتج.")
+                with colx2:
+                    if st.button(f"🗑️ حذف المنتج #{j}", key=f"del_prod_{i}_{j}"):
+                        camp["products"].pop(j)
+                        with open("campaign_plans.json", "w", encoding="utf-8") as f:
+                            json.dump(campaigns, f, ensure_ascii=False, indent=2)
+                        st.error("🚮 تم حذف المنتج.")
+                        st.rerun()
+
+                st.divider()
+
+                # 🔔 إرسال تنبيه للموظف
+                if p["الموظف المسؤول"] != "لم يتم التعيين":
+                    if st.button(f"📢 إرسال تنبيه للموظف {p['الموظف المسؤول']}", key=f"notify_{i}_{j}"):
+                        LOGS.append({
+                            "user": p["الموظف المسؤول"],
+                            "product": p["المنتج"],
+                            "scenario": "تنفيذ فيديوهات الحملة",
+                            "platform": "-",
+                            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            "status": "رسالة من الأدمن",
+                            "note": f"يرجى تنفيذ فيديوهات {p['المنتج']} ({', '.join(p['أنواع الفيديوهات'])}) حسب الخطة."
+                        })
+                        with open("user_logs.json", "w", encoding="utf-8") as f:
+                            json.dump(LOGS, f, ensure_ascii=False, indent=2)
+                        st.success(f"✅ تم إرسال تنبيه إلى {p['الموظف المسؤول']}")
+
+        # حذف الحملة
+        st.divider()
+        if st.button(f"🗑️ حذف الحملة بالكامل #{i}", type="secondary"):
+            campaigns.pop(i)
+            with open("campaign_plans.json", "w", encoding="utf-8") as f:
+                json.dump(campaigns, f, ensure_ascii=False, indent=2)
+            st.error("🚮 تم حذف الحملة بنجاح.")
+            st.rerun()
 
 
 # ------------------------------
@@ -477,6 +496,7 @@ else:
     elif page == "admin" and st.session_state.role == "admin": admin_dashboard()
     elif page == "plan_campaign" and st.session_state.role == "admin":
         plan_campaign()
+
 
 
 
