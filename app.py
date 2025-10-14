@@ -305,9 +305,8 @@ def sidebar():
             if st.button("🧭 لوحة التحكم", use_container_width=True): st.session_state.page = "admin"
         if st.button("🚪 تسجيل الخروج", use_container_width=True): logout()
         if st.session_state.role == "admin":
-    if st.button("📅 تخطيط حملة جديدة", use_container_width=True):
-        st.session_state.page = "plan_campaign"
-
+            if st.button("📅 تخطيط حملة جديدة", use_container_width=True):
+                st.session_state.page = "plan_campaign"
 
 # ------------------------------
 # 🚀 النظام الرئيسي
@@ -324,4 +323,5 @@ else:
     elif page == "generator": generator()
     elif page == "account": account_page()
     elif page == "admin" and st.session_state.role == "admin": admin_dashboard()
+
 
