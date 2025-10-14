@@ -19,10 +19,10 @@ with open("options.json", "r", encoding="utf-8") as f:
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # حسابات الدخول
-USERS = {
-    "admin": {"password": "1234", "role": "admin"},
-    "qudah": {"password": "1234", "role": "user"},
-}
+# USERS = {...}
+with open("users.json", "r", encoding="utf-8") as f:
+    USERS = json.load(f)
+
 
 # ==============================
 # 🔐 شاشة تسجيل الدخول
@@ -185,3 +185,4 @@ else:
         admin_dashboard()
     elif choice == "🚪 تسجيل الخروج":
         logout()
+
