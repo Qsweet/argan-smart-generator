@@ -323,5 +323,9 @@ else:
     elif page == "generator": generator()
     elif page == "account": account_page()
     elif page == "admin" and st.session_state.role == "admin": admin_dashboard()
+    elif page == "plan_campaign" and st.session_state.role == "admin":
+        plan_campaign()
+
+
 
 
