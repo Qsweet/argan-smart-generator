@@ -96,32 +96,7 @@ def home():
         st.session_state.page="generator"; st.rerun()
 
 # -------------------- صفحة توليد السيناريوهات --------------------
-def generator():
-    st.markdown("<div class='card'><h2>🧠 إنتاج السيناريوهات التسويقية</h2>",unsafe_allow_html=True)
-    c1,c2=st.columns(2)
-    with c1:
-        offer=st.selectbox("🎁 العرض:",options["offer"])
-        product=st.selectbox("🧴 المنتج:",options["product"])
-        platform=st.selectbox("📱 المنصة:",options["platform"])
-        scenario=st.selectbox("🎬 السيناريو:",options["scenario"])
-    with c2:
-        shipping=st.selectbox("🚚 التوصيل:",options["shipping"])
-        gift=st.selectbox("🎁 الهدية:",options["gift"])
-        cashback=st.selectbox("💸 الكاش باك:",options["cashback"])
-        tone=st.selectbox("🎤 نبرة النص:",options["tone"])
-    inst=st.text_area("📝 تعليمات إضافية:")
-    if st.button("✨ توليد النص"):
-        with st.spinner("جارٍ توليد النص..."):
-            prompt=f"اكتب سكربت باللهجة السعودية لمنتج {product} على منصة {platform} بأسلوب {tone}. السيناريو: {scenario}. العرض: {offer}, التوصيل: {shipping}, الهدية: {gift}, الكاش باك: {cashback}. تعليمات: {inst}"
-            try:
-                r=openai.chat.completions.create(model="gpt-4o-mini",messages=[{"role":"system","content":"كاتب محتوى تسويقي سعودي محترف."},{"role":"user","content":prompt}])
-                s=r.choices[0].message.content.strip()
-                st.text_area("📜 النص الناتج:",s,height=220)
-                log_scenario(st.session_state.user,product,scenario,platform)
-                st.success("✅ تم حفظ السيناريو في حسابك")
-            except Exception as e: st.error(e)
-    st.markdown("</div>",unsafe_allow_html=True)
-
+generator
 # -------------------- حساب المستخدم --------------------
 def account():
     df=get_df(); df=df[df["user"]==st.session_state.user]
@@ -191,3 +166,4 @@ if page=="home": home()
 elif page=="generator": generator()
 elif page=="account": account()
 elif page=="admin": admin()
+
