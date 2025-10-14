@@ -1,169 +1,174 @@
 # ============================================
-# 🌿 Argan Package Smart CMS v8
-# لوحة تحكم احترافية + إحصائيات تفاعلية + جدول رئيسي
-# إعداد: د. محمد القضاه
+# 🌿 Argan Package Smart Script Generator v2.1
+# الكاتب: د. محمد القضاه
 # ============================================
 
 import streamlit as st
-import pandas as pd
 import openai
+import json
 import datetime
-import json, csv
-from pathlib import Path
-import plotly.express as px
 
-# إعداد الصفحة
-st.set_page_config(page_title="Argan Smart CMS", page_icon="🌿", layout="wide")
+# إعدادات الواجهة
+st.set_page_config(page_title="Argan Package Smart Script Generator", page_icon="🌿", layout="centered")
 
-# ======================== CSS ========================
-st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700&display=swap');
-html, body, [class*="css"]  {
-  font-family: 'Tajawal', sans-serif;
-  background-color: #F8F5F0;
+# تحميل البيانات من options.json
+with open("options.json", "r", encoding="utf-8") as f:
+    options = json.load(f)
+
+# مفتاح OpenAI
+openai.api_key = st.secrets["OPENAI_API_KEY"]
+
+# ملف تسجيل الدخول التجريبي
+USERS = {
+    "admin": {"password": "1234", "role": "admin"},
+    "qudah": {"password": "1234", "role": "user"},
 }
-h1,h2,h3,h4 { color: #1A1F1C; font-weight:700; }
-.stButton>button {
-  background-color:#1A1F1C;color:#fff;border-radius:8px;
-  font-weight:600;padding:0.6rem 1.5rem;border:none;
-}
-.stButton>button:hover{background-color:#E6B05C;color:#1A1F1C;}
-.card {
-  background:rgba(255,255,255,0.95);
-  border-radius:16px;
-  padding:25px;
-  box-shadow:0 4px 15px rgba(0,0,0,0.08);
-  margin-bottom:20px;
-}
-.navbar {
-  display:flex;justify-content:space-between;align-items:center;
-  padding:0.8rem 1rem;background:#1A1F1C;color:white;border-radius:8px;
-}
-.navbar button{
-  background:#E6B05C;color:#1A1F1C;border:none;
-  border-radius:6px;padding:0.4rem 0.8rem;font-weight:600;margin-left:0.4rem;
-}
-.navbar button:hover{background:white;color:#1A1F1C;}
-.metric-box {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-.metric-value {font-size: 1.8rem; font-weight: 700; color: #1A1F1C;}
-.metric-label {color: #E6B05C; font-weight: 600;}
-</style>
-""", unsafe_allow_html=True)
 
-# ======================== Load Data ========================
-with open("users.json","r",encoding="utf-8") as f: USERS=json.load(f)
-with open("options.json","r",encoding="utf-8") as f: options=json.load(f)
-openai.api_key=st.secrets["OPENAI_API_KEY"]
-Path("scenarios_log.csv").touch(exist_ok=True)
+# ==============================
+# 🔐 شاشة تسجيل الدخول
+# ==============================
+def login_screen():
+    st.title("🌿 نظام Argan Package")
+    st.subheader("👋 يرجى تسجيل الدخول للوصول للنظام")
+    
+    username = st.text_input("اسم المستخدم:")
+    password = st.text_input("كلمة المرور:", type="password")
 
-# -------------------- دوال مساعدة --------------------
-def get_role(u): return USERS.get(u,{}).get("role","user")
+    if st.button("تسجيل الدخول"):
+        if username in USERS and USERS[username]["password"] == password:
+            st.session_state.user = username
+            st.session_state.role = USERS[username]["role"]
+            st.session_state.logged_in = True
+            st.success(f"مرحبًا بك يا {username} 🌿")
+            st.rerun()
+        else:
+            st.error("❌ بيانات الدخول غير صحيحة.")
 
-def log_scenario(u,p,s,plat):
-    with open("scenarios_log.csv","a",encoding="utf-8",newline="") as f:
-        csv.writer(f).writerow([u,p,s,plat,"جديد","جديد","","","",datetime.datetime.now()])
-
-def get_df():
-    try:
-        df=pd.read_csv("scenarios_log.csv",names=["user","product","scenario","platform","status","required_action","delivery_date","video_link","extra","created_at"])
-        return df
-    except:
-        return pd.DataFrame(columns=["user","product","scenario","platform","status","required_action","delivery_date","video_link","created_at"])
-
-# -------------------- تسجيل الدخول --------------------
-def login():
-    st.markdown("<h1 style='text-align:center'>🌿 Argan Smart CMS</h1>",unsafe_allow_html=True)
-    u=st.text_input("👤 اسم المستخدم"); p=st.text_input("🔑 كلمة المرور",type="password")
-    if st.button("دخول"):
-        if u in USERS and USERS[u]["password"]==p:
-            st.session_state.user=u; st.session_state.page="home"; st.rerun()
-        else: st.error("❌ بيانات خاطئة")
-
-# -------------------- الصفحة الرئيسية --------------------
-def home():
-    st.markdown("<div class='card' style='text-align:center;'>",unsafe_allow_html=True)
-    st.markdown("<h2>أهلاً بكم في نظام إدارة المحتوى الذكي لشركة أرجان باكيج</h2>",unsafe_allow_html=True)
-    st.markdown("<p>إعداد: د. محمد القضاه</p>",unsafe_allow_html=True)
-    st.markdown("</div>",unsafe_allow_html=True)
-    if st.button("🚀 بدء إنتاج السيناريوهات",use_container_width=True):
-        st.session_state.page="generator"; st.rerun()
-
-# -------------------- صفحة توليد السيناريوهات --------------------
-generator
-# -------------------- حساب المستخدم --------------------
-def account():
-    df=get_df(); df=df[df["user"]==st.session_state.user]
-    st.markdown("<h2>👤 حسابي</h2>",unsafe_allow_html=True)
-    if df.empty: st.info("لا يوجد سيناريوهات بعد."); return
-    st.dataframe(df,use_container_width=True)
-
-# -------------------- لوحة تحكم الأدمن --------------------
-def admin():
-    st.markdown("<h2>👑 لوحة التحكم الإدارية</h2>",unsafe_allow_html=True)
-    df=get_df()
-    if df.empty:
-        st.warning("لا توجد بيانات بعد.")
-        return
-
-    # ======= إحصائيات عامة =======
-    c1,c2,c3 = st.columns(3)
+# ==============================
+# 🧠 صفحة إنتاج السيناريوهات
+# ==============================
+def generator():
+    st.markdown("<h2>🧠 إنتاج السيناريوهات التسويقية</h2>", unsafe_allow_html=True)
+    
+    c1, c2 = st.columns(2)
     with c1:
-        st.markdown("<div class='metric-box'><div class='metric-value'>{}</div><div class='metric-label'>إجمالي المستخدمين</div></div>".format(len(df["user"].unique())), unsafe_allow_html=True)
+        offer = st.selectbox("🎁 العرض:", options["offer"])
+        category = st.selectbox("🗂️ الفئة:", options["category"])
+        
+        # ✅ عرض المنتجات التابعة للفئة المختارة
+        selected_products = options["products"].get(category, [])
+        if selected_products:
+            product = st.selectbox("🧴 المنتج:", selected_products)
+        else:
+            st.warning("⚠️ لا توجد منتجات في هذه الفئة.")
+            return
+        
+        platform = st.selectbox("📱 المنصة:", options["platform"])
+        scenario = st.selectbox("🎬 السيناريو:", options["scenario"])
+    
     with c2:
-        st.markdown("<div class='metric-box'><div class='metric-value'>{}</div><div class='metric-label'>عدد السيناريوهات</div></div>".format(len(df)), unsafe_allow_html=True)
-    with c3:
-        latest = df["created_at"].max() if not df.empty else "-"
-        st.markdown("<div class='metric-box'><div class='metric-value'>{}</div><div class='metric-label'>آخر تحديث</div></div>".format(latest), unsafe_allow_html=True)
+        shipping = st.selectbox("🚚 التوصيل:", options["shipping"])
+        gift = st.selectbox("🎁 الهدية:", options["gift"])
+        cashback = st.selectbox("💸 الكاش باك:", options["cashback"])
+        tone = st.selectbox("🎤 نبرة النص:", options["tone"])
 
-    st.markdown("<br>",unsafe_allow_html=True)
+    inst = st.text_area("📝 تعليمات إضافية:")
 
-    # ======= الرسوم البيانية =======
-    col1,col2 = st.columns(2)
-    with col1:
-        f=df.groupby("user").size().reset_index(name="count")
-        st.plotly_chart(px.bar(f,x="user",y="count",color="user",title="👤 أكثر المستخدمين نشاطًا"),use_container_width=True)
-    with col2:
-        f2=df.groupby("platform").size().reset_index(name="count")
-        st.plotly_chart(px.pie(f2,names="platform",values="count",title="📱 توزيع المنصات"),use_container_width=True)
+    if st.button("✨ توليد النص"):
+        with st.spinner("جارٍ توليد النص..."):
+            prompt = f"""
+اكتب سكربت باللهجة السعودية لمنتج {product} من فئة {category} على منصة {platform} بأسلوب {tone}.
+السيناريو: {scenario}.
+العرض: {offer}.
+التوصيل: {shipping}.
+الهدية: {gift}.
+الكاش باك: {cashback}.
+تعليمات إضافية: {inst}.
+"""
+            try:
+                response = openai.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "أنت كاتب محتوى تسويقي سعودي محترف مختص في السناب والتيك توك."},
+                        {"role": "user", "content": prompt}
+                    ]
+                )
+                script = response.choices[0].message.content.strip()
+                
+                st.success("✅ تم توليد السكربت بنجاح!")
+                st.text_area("📜 النص الناتج:", script, height=250)
+                save_user_log(st.session_state.user, product, scenario, platform)
+            
+            except Exception as e:
+                st.error(f"حدث خطأ أثناء توليد النص: {e}")
 
-    st.plotly_chart(px.bar(df.groupby("product").size().reset_index(name="count"),
-                           x="product",y="count",color="product",
-                           title="🧴 أكثر المنتجات توليدًا للسكربتات"),
-                    use_container_width=True)
+# ==============================
+# 🧾 حفظ سجل المستخدم
+# ==============================
+def save_user_log(user, product, scenario, platform):
+    with open("user_logs.txt", "a", encoding="utf-8") as f:
+        f.write(f"{datetime.datetime.now()} | {user} | {product} | {scenario} | {platform}\n")
 
+# ==============================
+# ⚙️ لوحة التحكم (للأدمن فقط)
+# ==============================
+def admin_dashboard():
+    st.markdown("## 🧭 لوحة التحكم الإدارية")
+    try:
+        with open("user_logs.txt", "r", encoding="utf-8") as f:
+            logs = f.readlines()
+        if logs:
+            st.write("### السجلات الأخيرة:")
+            for line in reversed(logs[-10:]):
+                st.write(line.strip())
+        else:
+            st.info("لا توجد بيانات بعد.")
+    except FileNotFoundError:
+        st.info("لم يتم إنشاء سجل بعد.")
+
+# ==============================
+# 🏠 الصفحة الرئيسية
+# ==============================
+def home():
+    st.markdown("""
+        <div style='text-align:center;'>
+            <h1>🌿 نظام إدارة المحتوى الذكي لشركة Argan Package</h1>
+            <p>تم تطويره بواسطة <b>د. محمد القضاه</b></p>
+        </div>
+        """, unsafe_allow_html=True)
     st.markdown("---")
-    st.markdown("<h3>📋 الجدول الرئيسي</h3>",unsafe_allow_html=True)
-    st.dataframe(df,use_container_width=True)
+    st.page_link("generator", label="🚀 إنتاج السيناريوهات")
 
-# -------------------- Navbar --------------------
-if "user" not in st.session_state: login(); st.stop()
+# ==============================
+# 🚪 تسجيل الخروج
+# ==============================
+def logout():
+    st.session_state.logged_in = False
+    st.session_state.user = None
+    st.session_state.role = None
+    st.success("تم تسجيل الخروج بنجاح ✅")
+    st.rerun()
 
-st.markdown("<div class='navbar'>"
-            f"<div>🌿 {st.session_state.user}</div>"
-            "<div>", unsafe_allow_html=True)
-cols=st.columns(3)
-with cols[0]:
-    if st.button("🏠 الرئيسية"): st.session_state.page="home"; st.rerun()
-with cols[1]:
-    if st.button("👤 حسابي"): st.session_state.page="account"; st.rerun()
-with cols[2]:
-    if get_role(st.session_state.user)=="admin":
-        if st.button("📊 لوحة التحكم"): st.session_state.page="admin"; st.rerun()
-    if st.button("🚪 خروج"):
-        st.session_state.clear(); st.rerun()
-st.markdown("</div>",unsafe_allow_html=True)
+# ==============================
+# 🔄 النظام الرئيسي
+# ==============================
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
 
-# -------------------- التوجيه --------------------
-page=st.session_state.get("page","home")
-if page=="home": home()
-elif page=="generator": generator()
-elif page=="account": account()
-elif page=="admin": admin()
+if not st.session_state.logged_in:
+    login_screen()
+else:
+    user = st.session_state.user
+    role = st.session_state.role
 
+    st.sidebar.title("🌿 القائمة")
+    page = st.sidebar.radio("اختر الصفحة:", ["🏠 الرئيسية", "🧠 توليد السيناريوهات", "👤 حسابي"] + (["🧭 لوحة التحكم"] if role == "admin" else []) + ["🚪 تسجيل الخروج"])
+
+    if page == "🏠 الرئيسية":
+        home()
+    elif page == "🧠 توليد السيناريوهات":
+        generator()
+    elif page == "🧭 لوحة التحكم" and role == "admin":
+        admin_dashboard()
+    elif page == "🚪 تسجيل الخروج":
+        logout()
