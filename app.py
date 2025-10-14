@@ -1945,7 +1945,7 @@ def create_moraselaty_campaign():
     st.markdown("---")
     
     # تبويبات
-    tab1, tab2, tab3 = st.tabs(["📤 رفع بيانات جديدة", "🎯 إنشاء حملة جديدة", "📋 الحملات السابقة"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📤 رفع بيانات جديدة", "🎯 إنشاء حملة جديدة", "✍️ إنشاء حملة تسويقية", "📋 الحملات السابقة"])
     
     with tab1:
         st.markdown("### 📤 رفع ملف بيانات العملاء")
@@ -2183,16 +2183,200 @@ def create_moraselaty_campaign():
                     
                     with col_c2:
                         if st.button("📥 تصدير Excel", key=f"export_{campaign['id']}"):
+                            # تصدير عمودين فقط: اسم العميل ورقم الجوال
                             df_export = pd.DataFrame(campaign['customers'])
+                            df_export_filtered = df_export[['اسم العميل', 'رقم الهاتف']].copy()
+                            df_export_filtered.columns = ['اسم العميل', 'رقم الجوال']
                             st.download_button(
                                 "⬇️ تحميل",
-                                df_export.to_csv(index=False, encoding='utf-8-sig'),
-                                f"campaign_{campaign['id']}.csv",
+                                df_export_filtered.to_csv(index=False, encoding='utf-8-sig'),
+                                f"campaign_{campaign['id']}_contacts.csv",
                                 "text/csv"
                             )
                     
                     st.markdown("**✍️ نص الرسالة:**")
                     st.text_area("", campaign['message'], height=100, key=f"msg_{campaign['id']}", disabled=True)
+    
+    with tab3:
+        st.markdown("### ✍️ إنشاء حملة تسويقية بالذكاء الاصطناعي")
+        st.info("🤖 سيتم استخدام ChatGPT لإعادة صياغة فكرتك بشكل احترافي ومختصر")
+        
+        # تحميل قائمة المنتجات
+        try:
+            with open("options.json", "r", encoding="utf-8") as f:
+                options_data = json.load(f)
+            products_list = options_data.get("product", [])
+        except:
+            products_list = []
+            st.error("❌ خطأ في تحميل قائمة المنتجات")
+        
+        st.markdown("#### 1️⃣ اختر المنتجات المشاركة")
+        selected_products = st.multiselect(
+            "المنتجات:",
+            products_list,
+            key="marketing_products"
+        )
+        
+        st.markdown("---")
+        st.markdown("#### 2️⃣ اكتب فكرة الحملة")
+        campaign_idea = st.text_area(
+            "الفكرة الأساسية:",
+            placeholder="مثال: عرض خاص على منتجات زيت الأرجان لفترة محدودة مع خصم 20%",
+            height=100,
+            key="campaign_idea"
+        )
+        
+        st.markdown("---")
+        st.markdown("#### 3️⃣ روابط المنتجات")
+        
+        # إنشاء session_state للروابط
+        if 'product_links' not in st.session_state:
+            st.session_state.product_links = []
+        
+        # عدد الروابط
+        num_links = st.number_input("عدد الروابط:", min_value=1, max_value=10, value=len(selected_products) if selected_products else 1, key="num_links")
+        
+        product_links = []
+        for i in range(int(num_links)):
+            col_link1, col_link2 = st.columns([1, 2])
+            with col_link1:
+                product_name = st.text_input(f"المنتج {i+1}:", value=selected_products[i] if i < len(selected_products) else "", key=f"product_name_{i}")
+            with col_link2:
+                product_url = st.text_input(f"الرابط {i+1}:", placeholder="https://...", key=f"product_url_{i}")
+            
+            if product_name and product_url:
+                product_links.append({"name": product_name, "url": product_url})
+        
+        st.markdown("---")
+        st.markdown("#### 4️⃣ معلومات الزر")
+        
+        col_btn1, col_btn2 = st.columns(2)
+        with col_btn1:
+            button_name = st.text_input("اسم الزر:", placeholder="مثال: اطلب الآن", key="button_name")
+        with col_btn2:
+            button_url = st.text_input("رابط الزر:", placeholder="https://...", key="button_url")
+        
+        st.markdown("---")
+        
+        # زر توليد النص
+        if st.button("🤖 توليد النص بالذكاء الاصطناعي", type="primary", use_container_width=True):
+            if not campaign_idea:
+                st.error("❌ يرجى كتابة فكرة الحملة!")
+            elif not button_name or not button_url:
+                st.error("❌ يرجى إدخال معلومات الزر!")
+            else:
+                with st.spinner("جاري توليد النص..."):
+                    try:
+                        # استدعاء ChatGPT API
+                        import openai
+                        import os
+                        
+                        # إعداد البرومبت
+                        prompt = f"""أنت مسوق محترف لمنتجات العناية والتجميل. اكتب رسالة تسويقية احترافية ومختصرة للواتساب بناءً على الفكرة التالية:
+
+الفكرة: {campaign_idea}
+
+المنتجات: {', '.join(selected_products) if selected_products else 'غير محدد'}
+
+المتطلبات:
+- الرسالة يجب أن تكون باللغة العربية
+- مختصرة وواضحة (لا تتجاوز 150 كلمة)
+- احترافية وجذابة
+- بدون إيموجي
+- بدون عناوين أو تنسيق
+- فقط النص التسويقي مباشرة
+
+اكتب الرسالة فقط بدون أي إضافات:"""
+                        
+                        # استدعاء API
+                        client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+                        response = client.chat.completions.create(
+                            model="gpt-4-turbo",
+                            messages=[
+                                {"role": "system", "content": "أنت مسوق محترف لمنتجات العناية والتجميل."},
+                                {"role": "user", "content": prompt}
+                            ],
+                            temperature=0.7,
+                            max_tokens=500
+                        )
+                        
+                        generated_text = response.choices[0].message.content.strip()
+                        
+                        # بناء النص النهائي
+                        final_text = "أرجو اعتماد الحملة التالية من ميتا وتجهيزها:\n\n"
+                        final_text += generated_text + "\n\n"
+                        
+                        # إضافة روابط المنتجات
+                        if product_links:
+                            final_text += "روابط المنتجات:\n"
+                            for link in product_links:
+                                final_text += f"- {link['name']}: {link['url']}\n"
+                            final_text += "\n"
+                        
+                        # إضافة معلومات الزر
+                        final_text += f"زر الحملة:\n"
+                        final_text += f"الاسم: {button_name}\n"
+                        final_text += f"الرابط: {button_url}"
+                        
+                        # حفظ في session_state
+                        st.session_state.generated_campaign_text = final_text
+                        
+                        st.success("✅ تم توليد النص بنجاح!")
+                        
+                    except Exception as e:
+                        st.error(f"❌ خطأ في توليد النص: {str(e)}")
+                        st.info("💡 تأكد من إعداد OPENAI_API_KEY في secrets.toml")
+        
+        # عرض النص المولد
+        if hasattr(st.session_state, 'generated_campaign_text'):
+            st.markdown("---")
+            st.markdown("### 📋 معاينة النص المولد")
+            
+            generated_text_area = st.text_area(
+                "النص النهائي:",
+                st.session_state.generated_campaign_text,
+                height=300,
+                key="final_text_display"
+            )
+            
+            col_action1, col_action2 = st.columns(2)
+            with col_action1:
+                if st.button("📋 نسخ النص", use_container_width=True):
+                    st.code(st.session_state.generated_campaign_text, language="text")
+                    st.success("✅ يمكنك نسخ النص من المربع أعلاه")
+            
+            with col_action2:
+                if st.button("💾 حفظ كحملة", type="primary", use_container_width=True):
+                    # حفظ الحملة التسويقية
+                    try:
+                        with open("moraselaty_campaigns.json", "r", encoding="utf-8") as f:
+                            campaigns_data = json.load(f)
+                    except:
+                        campaigns_data = {"campaigns": []}
+                    
+                    new_campaign = {
+                        "id": len(campaigns_data["campaigns"]) + 1,
+                        "name": f"حملة تسويقية - {datetime.now().strftime('%Y-%m-%d')}",
+                        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "created_by": st.session_state.username,
+                        "type": "marketing",
+                        "products": selected_products,
+                        "idea": campaign_idea,
+                        "product_links": product_links,
+                        "button_name": button_name,
+                        "button_url": button_url,
+                        "message": st.session_state.generated_campaign_text
+                    }
+                    
+                    campaigns_data["campaigns"].append(new_campaign)
+                    
+                    with open("moraselaty_campaigns.json", "w", encoding="utf-8") as f:
+                        json.dump(campaigns_data, f, ensure_ascii=False, indent=2)
+                    
+                    st.success("✅ تم حفظ الحملة التسويقية بنجاح!")
+                    st.balloons()
+                    del st.session_state.generated_campaign_text
+                    st.rerun()
 
 
 def logout():
