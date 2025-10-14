@@ -1231,15 +1231,28 @@ def plan_campaign():
                 # تحويل المنتجات إلى DataFrame
                 products_data = []
                 for p in camp["products"]:
-                    videos_str = ", ".join([f"{v['type']} ({v['count']})" for v in p.get("videos", [])])
+                    videos_str = ", ".join([f"{v['type']} ({v['count']})" for v in p.get("videos", p.get("أنواع الفيديوهات", []))])
                     designs_str = ", ".join([f"{d['type']} ({d['count']})" for d in p.get("designs", [])])
                     
+                    # دعم الصيغة القديمة والجديدة
+                    product_name = p.get("product_name", p.get("المنتج", "—"))
+                    current_price = p.get("current_price", p.get("السعر الحالي", 0))
+                    campaign_price = p.get("campaign_price", p.get("السعر بعد الخصم", 0))
+                    discount_type = p.get("discount_type", "—")
+                    discount_code = p.get("discount_code", p.get("كود الخصم", "—"))
+                    
+                    # تنظيف القيم إذا كانت تحتوي على "ر.س"
+                    if isinstance(current_price, str):
+                        current_price = current_price.replace(" ر.س", "").strip()
+                    if isinstance(campaign_price, str):
+                        campaign_price = campaign_price.replace(" ر.س", "").strip()
+                    
                     products_data.append({
-                        "المنتج": p["product_name"],
-                        "السعر الحالي": f"{p['current_price']} ر.س",
-                        "سعر الحملة": f"{p['campaign_price']} ر.س",
-                        "نوع الخصم": p["discount_type"],
-                        "الكود": p.get("discount_code", "—"),
+                        "المنتج": product_name,
+                        "السعر الحالي": f"{current_price} ر.س",
+                        "سعر الحملة": f"{campaign_price} ر.س",
+                        "نوع الخصم": discount_type,
+                        "الكود": discount_code,
                         "الفيديوهات": videos_str if videos_str else "—",
                         "التصاميم": designs_str if designs_str else "—"
                     })
@@ -1251,7 +1264,7 @@ def plan_campaign():
                 st.markdown("##### ✏️ تعديل المنتجات")
                 product_to_edit = st.selectbox(
                     "اختر منتج للتعديل:",
-                    [p["product_name"] for p in camp["products"]],
+                    [p.get("product_name", p.get("المنتج", "—")) for p in camp["products"]],
                     key=f"edit_select_{i}"
                 )
                 
@@ -1263,7 +1276,7 @@ def plan_campaign():
                 
                 with col_del:
                     if st.button("🗑️ حذف المنتج", key=f"del_prod_{i}", use_container_width=True, type="secondary"):
-                        camp["products"] = [p for p in camp["products"] if p["product_name"] != product_to_edit]
+                        camp["products"] = [p for p in camp["products"] if p.get("product_name", p.get("المنتج")) != product_to_edit]
                         save_json("campaign_plans.json", campaigns)
                         st.success(f"✅ تم حذف {product_to_edit}")
                         st.rerun()
