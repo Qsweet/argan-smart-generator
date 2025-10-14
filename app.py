@@ -155,17 +155,22 @@ def admin_dashboard():
     users = list(USERS.keys())  # الآن يعرض كل المستخدمين المسجلين
 
     table = []
-    for u in users:
-        user_df = df[df["user"] == u]
+ for u in users:
+    user_df = df[df["user"] == u]
+    if not user_df.empty:
         last_activity = user_df["timestamp"].max()
         total_scripts = len(user_df)
         last_product = user_df.iloc[-1]["product"]
-        table.append({
-            "المستخدم": u,
-            "آخر نشاط": last_activity,
-            "عدد السكربتات": total_scripts,
-            "آخر منتج": last_product
-        })
+    else:
+        last_activity = "-"
+        total_scripts = 0
+        last_product = "-"
+    table.append({
+        "المستخدم": u,
+        "آخر نشاط": last_activity,
+        "عدد السكربتات": total_scripts,
+        "آخر منتج": last_product
+    })
 
     st.table(pd.DataFrame(table))
 
@@ -230,4 +235,5 @@ else:
     elif page == "generator": generator()
     elif page == "account": account_page()
     elif page == "admin" and st.session_state.role == "admin": admin_dashboard()
+
 
