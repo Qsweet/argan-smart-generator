@@ -1520,6 +1520,240 @@ def plan_campaign():
                 st.rerun()
 
 # ============================================
+# 💰 تتبع العائد الشهري
+# ============================================
+def monthly_revenue_tracking():
+    load_custom_css()
+    
+    st.markdown("""
+        <div style='background: linear-gradient(135deg, #28a745 0%, #20c997 100%); 
+                    padding: 1.5rem; border-radius: 15px; color: white; text-align: center; margin-bottom: 2rem;'>
+            <h1 style='margin: 0; font-size: 2rem;'>💰 تتبع العائد الشهري</h1>
+            <p style='margin: 0.5rem 0 0 0; opacity: 0.9;'>إدارة ومتابعة المصاريف والمداخيل والعائد على الاستثمار</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # رفع ملف Excel
+    st.markdown("رفع ملف تتبع العائد")
+    
+    uploaded_file = st.file_uploader(
+        "📄 ارفع ملف تتبع العائد الشهري (Excel):",
+        type=["xlsx", "xls"],
+        help="ملف Excel يحتوي على بيانات العائد الشهري بشكل تابات (كل شهر في تاب)",
+        key="revenue_uploader"
+    )
+    
+    if uploaded_file:
+        try:
+            # حفظ الملف
+            os.makedirs("revenue_files", exist_ok=True)
+            file_path = f"revenue_files/{uploaded_file.name}"
+            
+            with open(file_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            
+            st.success(f"✅ تم رفع الملف: {uploaded_file.name}")
+            
+            # حفظ مسار الملف
+            st.session_state.current_revenue_file = file_path
+            
+        except Exception as e:
+            st.error(f"❌ خطأ في رفع الملف: {str(e)}")
+    
+    # التحقق من وجود ملف
+    revenue_file = st.session_state.get('current_revenue_file')
+    
+    if not revenue_file and os.path.exists("revenue_files"):
+        files = [f for f in os.listdir("revenue_files") if f.endswith(('.xlsx', '.xls'))]
+        if files:
+            revenue_file = f"revenue_files/{files[0]}"
+            st.session_state.current_revenue_file = revenue_file
+    
+    if not revenue_file or not os.path.exists(revenue_file):
+        st.warning("⚠️ لم يتم رفع أي ملف بعد. ارفع ملف Excel للبدء.")
+        return
+    
+    try:
+        # قراءة جميع الأوراق (الأشهر)
+        excel_file = pd.ExcelFile(revenue_file)
+        sheet_names = excel_file.sheet_names
+        
+        if not sheet_names:
+            st.error("❌ الملف لا يحتوي على أي أوراق")
+            return
+        
+        # قراءة الشهر الحالي (أول ورقة)
+        current_month_sheet = sheet_names[0]
+        df_current = pd.read_excel(revenue_file, sheet_name=current_month_sheet)
+        
+        # استخراج تاريخ آخر تحديث
+        last_update = "غير محدد"
+        if 'Unnamed: 9' in df_current.columns:
+            for val in df_current['Unnamed: 9'].dropna():
+                if isinstance(val, str) and 'تاريخ' in val:
+                    last_update = val.split('\n')[-1] if '\n' in val else val.split('تاريخ')[-1].strip()
+                    break
+        
+        # عرض معلومات الشهر الحالي
+        st.markdown(f"بيانات الشهر الحالي: **{current_month_sheet}**")
+        
+        col_info1, col_info2 = st.columns(2)
+        with col_info1:
+            st.info(f"📅 **الشهر:** {current_month_sheet}")
+        with col_info2:
+            st.info(f"⏰ **آخر تحديث:** {last_update}")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # حساب الإحصائيات
+        total_expenses = 0
+        total_revenue = 0
+        total_orders = 0
+        
+        if 'قيمة المصاريف' in df_current.columns:
+            total_expenses = df_current['قيمة المصاريف'].replace('****', 0).replace('***', 0).fillna(0).astype(float).sum()
+        
+        if 'قيمة المدخول' in df_current.columns:
+            total_revenue = df_current['قيمة المدخول'].fillna(0).astype(float).sum()
+        
+        if 'عدد الطلبات' in df_current.columns:
+            total_orders = df_current['عدد الطلبات'].fillna(0).astype(float).sum()
+        
+        net_profit = total_revenue - total_expenses
+        roi = (net_profit / total_expenses * 100) if total_expenses > 0 else 0
+        
+        # عرض الإحصائيات الرئيسية
+        st.markdown("الإحصائيات الرئيسية")
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric(
+                "📈 إجمالي المداخيل",
+                f"{total_revenue:,.0f} ر.س",
+                delta=None
+            )
+        
+        with col2:
+            st.metric(
+                "📉 إجمالي المصاريف",
+                f"{total_expenses:,.0f} ر.س",
+                delta=None
+            )
+        
+        with col3:
+            st.metric(
+                "💰 صافي الربح",
+                f"{net_profit:,.0f} ر.س",
+                delta=f"{roi:.1f}% ROI"
+            )
+        
+        with col4:
+            st.metric(
+                "📦 عدد الطلبات",
+                f"{int(total_orders):,}",
+                delta=None
+            )
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # عرض الجدول التفصيلي
+        st.markdown("التفاصيل الكاملة")
+        
+        # تنظيف البيانات
+        df_display = df_current.copy()
+        
+        # إزالة الأعمدة الفارغة
+        df_display = df_display.loc[:, ~df_display.columns.str.contains('^Unnamed')]
+        
+        # تلوين الصفوف حسب العائد
+        def highlight_roi(row):
+            if 'معدل العائد من الاستثمار' in row.index:
+                roi_val = row['معدل العائد من الاستثمار']
+                if pd.notna(roi_val) and isinstance(roi_val, (int, float)):
+                    if roi_val >= 2.0:
+                        return ['background-color: #d4edda'] * len(row)  # أخضر
+                    elif roi_val >= 1.0:
+                        return ['background-color: #d1ecf1'] * len(row)  # أزرق
+                    else:
+                        return ['background-color: #fff3cd'] * len(row)  # أصفر
+            return [''] * len(row)
+        
+        styled_df = df_display.style.apply(highlight_roi, axis=1)
+        st.dataframe(styled_df, use_container_width=True, height=400)
+        
+        # ملاحظة
+        st.info("""
+            💡 **ملاحظة:** 
+            - 🟢 **أخضر**: عائد ممتاز (ROI ≥ 2.0)
+            - 🔵 **أزرق**: عائد جيد (ROI ≥ 1.0)
+            - 🟡 **أصفر**: عائد ضعيف (ROI < 1.0)
+        """)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.divider()
+        
+        # عرض الأشهر السابقة
+        if len(sheet_names) > 1:
+            st.markdown("مشاهدة الأشهر السابقة")
+            
+            selected_month = st.selectbox(
+                "📅 اختر الشهر:",
+                sheet_names[1:],
+                help="اختر شهراً لمشاهدة بياناته"
+            )
+            
+            if st.button("👁️ عرض بيانات الشهر", use_container_width=True, type="primary"):
+                df_selected = pd.read_excel(revenue_file, sheet_name=selected_month)
+                
+                # حساب الإحصائيات
+                sel_expenses = 0
+                sel_revenue = 0
+                sel_orders = 0
+                
+                if 'قيمة المصاريف' in df_selected.columns:
+                    sel_expenses = df_selected['قيمة المصاريف'].replace('****', 0).replace('***', 0).fillna(0).astype(float).sum()
+                
+                if 'قيمة المدخول' in df_selected.columns:
+                    sel_revenue = df_selected['قيمة المدخول'].fillna(0).astype(float).sum()
+                
+                if 'عدد الطلبات' in df_selected.columns:
+                    sel_orders = df_selected['عدد الطلبات'].fillna(0).astype(float).sum()
+                
+                sel_profit = sel_revenue - sel_expenses
+                sel_roi = (sel_profit / sel_expenses * 100) if sel_expenses > 0 else 0
+                
+                st.markdown(f"بيانات شهر: **{selected_month}**")
+                
+                col1, col2, col3, col4 = st.columns(4)
+                
+                with col1:
+                    st.metric("📈 المداخيل", f"{sel_revenue:,.0f} ر.س")
+                
+                with col2:
+                    st.metric("📉 المصاريف", f"{sel_expenses:,.0f} ر.س")
+                
+                with col3:
+                    st.metric("💰 صافي الربح", f"{sel_profit:,.0f} ر.س", delta=f"{sel_roi:.1f}% ROI")
+                
+                with col4:
+                    st.metric("📦 الطلبات", f"{int(sel_orders):,}")
+                
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+                # عرض الجدول
+                df_sel_display = df_selected.copy()
+                df_sel_display = df_sel_display.loc[:, ~df_sel_display.columns.str.contains('^Unnamed')]
+                
+                styled_sel = df_sel_display.style.apply(highlight_roi, axis=1)
+                st.dataframe(styled_sel, use_container_width=True, height=400)
+        
+    except Exception as e:
+        st.error(f"❌ خطأ في قراءة الملف: {str(e)}")
+        import traceback
+        st.code(traceback.format_exc())
+
+# ============================================
 # 🚺 تسجيل الخروج
 # ============================================
 def logout():
@@ -1568,6 +1802,10 @@ def sidebar():
             if st.button("📅 تخطيط حملة جديدة", use_container_width=True):
                 st.session_state.page = "plan_campaign"
                 st.rerun()
+            
+            if st.button("💰 تتبع العائد الشهري", use_container_width=True):
+                st.session_state.page = "revenue_tracking"
+                st.rerun()
         
         st.markdown("---")
         
@@ -1613,6 +1851,8 @@ else:
         admin_dashboard()
     elif page == "plan_campaign" and st.session_state.role == "admin":
         plan_campaign()
+    elif page == "revenue_tracking" and st.session_state.role == "admin":
+        monthly_revenue_tracking()
     else:
         home()
 
