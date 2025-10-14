@@ -133,13 +133,25 @@ def save_log(user, product, scenario, platform):
 # ------------------------------
 def account_page():
     st.markdown(f"<h2>👤 حسابي - {st.session_state.user}</h2>", unsafe_allow_html=True)
+
+    # 📨 فحص وجود رسائل جديدة من الأدمن
+    admin_msgs = [
+        x for x in LOGS
+        if x["user"] == st.session_state.user and x["status"] == "رسالة من الأدمن"
+    ]
+    if admin_msgs:
+        latest_msg = admin_msgs[-1]  # آخر رسالة
+        st.warning(f"📩 لديك رسالة جديدة من الأدمن بتاريخ {latest_msg['timestamp']}:\n\n**{latest_msg['note']}**")
+
+    # 🧾 عرض السجلات الخاصة بالمستخدم
     user_logs = [x for x in LOGS if x["user"] == st.session_state.user]
     if not user_logs:
-        st.info("لم تنتج أي سكربتات بعد.")
+        st.info("لم تُنتج أي سكربتات بعد.")
         return
 
     df = pd.DataFrame(user_logs)
     st.dataframe(df, use_container_width=True)
+
 
 # ------------------------------
 # 🧭 لوحة التحكم الإدارية
@@ -235,5 +247,6 @@ else:
     elif page == "generator": generator()
     elif page == "account": account_page()
     elif page == "admin" and st.session_state.role == "admin": admin_dashboard()
+
 
 
