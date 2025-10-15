@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-قسم تخطيط التسعير للحملات
-Pricing Planning Module for Campaigns
+قسم تخطيط التسعير للحملات - النسخة المحسنة
+Pricing Planning Module for Campaigns - Improved Version
 """
 
 import streamlit as st
@@ -225,7 +225,7 @@ def create_new_pricing_plan():
     
     # إضافة منتج جديد
     with st.expander("➕ إضافة منتج"):
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3 = st.columns(3)
         
         with col1:
             product_name = st.selectbox(
@@ -257,13 +257,6 @@ def create_new_pricing_plan():
                 key="new_cost"
             )
         
-        with col4:
-            category = st.text_input(
-                "الفئة:",
-                value="عام",
-                key="new_category"
-            )
-        
         if st.button("➕ إضافة المنتج", use_container_width=True, type="primary"):
             # حساب الأسعار
             after_discount = base_price * (1 - base_discount / 100)
@@ -274,15 +267,14 @@ def create_new_pricing_plan():
             
             # تحديد الحالة
             if profit_margin >= 30:
-                status = "excellent"
+                status = "ممتاز"
             elif profit_margin >= 15:
-                status = "good"
+                status = "جيد"
             else:
-                status = "warning"
+                status = "تحذير"
             
             product = {
                 "name": product_name,
-                "category": category,
                 "base_price": base_price,
                 "after_discount": after_discount,
                 "after_code": after_code,
@@ -297,25 +289,117 @@ def create_new_pricing_plan():
             st.success(f"✅ تم إضافة {product_name}")
             st.rerun()
     
-    # عرض المنتجات المضافة
+    # عرض المنتجات المضافة مع إمكانية التعديل
     if st.session_state.pricing_products:
         st.markdown("#### 📦 المنتجات المضافة")
+        st.markdown("💡 **يمكنك تعديل أي قيمة في الجدول أدناه وسيتم إعادة الحساب تلقائياً**")
+        
+        # عرض كل منتج مع إمكانية التعديل
+        for idx, product in enumerate(st.session_state.pricing_products):
+            with st.expander(f"📦 {product['name']}", expanded=True):
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    new_base_price = st.number_input(
+                        "السعر الأساسي:",
+                        min_value=0.0,
+                        value=float(product['base_price']),
+                        step=1.0,
+                        key=f"edit_base_price_{idx}"
+                    )
+                
+                with col2:
+                    new_cost = st.number_input(
+                        "التكلفة:",
+                        min_value=0.0,
+                        value=float(product['cost']),
+                        step=1.0,
+                        key=f"edit_cost_{idx}"
+                    )
+                
+                with col3:
+                    if st.button("🔄 تحديث", key=f"update_{idx}", use_container_width=True):
+                        # إعادة حساب القيم
+                        after_discount = new_base_price * (1 - base_discount / 100)
+                        after_code = after_discount * (1 - code_discount / 100)
+                        discount_percent = ((new_base_price - after_code) / new_base_price) * 100 if new_base_price > 0 else 0
+                        net_profit = after_code - new_cost
+                        profit_margin = (net_profit / after_code) * 100 if after_code > 0 else 0
+                        
+                        # تحديد الحالة
+                        if profit_margin >= 30:
+                            status = "ممتاز"
+                        elif profit_margin >= 15:
+                            status = "جيد"
+                        else:
+                            status = "تحذير"
+                        
+                        # تحديث المنتج
+                        st.session_state.pricing_products[idx] = {
+                            "name": product['name'],
+                            "base_price": new_base_price,
+                            "after_discount": after_discount,
+                            "after_code": after_code,
+                            "cost": new_cost,
+                            "profit_margin": profit_margin,
+                            "discount_percent": discount_percent,
+                            "net_profit": net_profit,
+                            "status": status
+                        }
+                        
+                        st.success("✅ تم تحديث المنتج!")
+                        st.rerun()
+                
+                # عرض النتائج المحسوبة
+                st.markdown("---")
+                col_r1, col_r2, col_r3, col_r4 = st.columns(4)
+                
+                with col_r1:
+                    st.metric("بعد الخصم", f"{product['after_discount']:.2f} ر.س")
+                
+                with col_r2:
+                    st.metric("بعد الكود", f"{product['after_code']:.2f} ر.س")
+                
+                with col_r3:
+                    st.metric("الربح الصافي", f"{product['net_profit']:.2f} ر.س")
+                
+                with col_r4:
+                    # تلوين نسبة الربح
+                    if product['profit_margin'] >= 30:
+                        color = "green"
+                    elif product['profit_margin'] >= 15:
+                        color = "orange"
+                    else:
+                        color = "red"
+                    
+                    st.metric("نسبة الربح", f"{product['profit_margin']:.2f}%")
+                    st.markdown(f"<p style='color: {color}; font-weight: bold; text-align: center;'>{product['status']}</p>", unsafe_allow_html=True)
+                
+                # زر الحذف
+                if st.button("🗑️ حذف المنتج", key=f"delete_product_{idx}", type="secondary"):
+                    st.session_state.pricing_products.pop(idx)
+                    st.success("✅ تم حذف المنتج!")
+                    st.rerun()
+        
+        # جدول ملخص
+        st.markdown("---")
+        st.markdown("#### 📊 جدول ملخص")
         
         df = pd.DataFrame(st.session_state.pricing_products)
         
         # تنسيق الأعمدة
-        df['base_price'] = df['base_price'].apply(lambda x: f"{x:.2f}")
-        df['after_discount'] = df['after_discount'].apply(lambda x: f"{x:.2f}")
-        df['after_code'] = df['after_code'].apply(lambda x: f"{x:.2f}")
-        df['cost'] = df['cost'].apply(lambda x: f"{x:.2f}")
-        df['profit_margin'] = df['profit_margin'].apply(lambda x: f"{x:.2f}%")
-        df['discount_percent'] = df['discount_percent'].apply(lambda x: f"{x:.2f}%")
-        df['net_profit'] = df['net_profit'].apply(lambda x: f"{x:.2f}")
+        df_display = df.copy()
+        df_display['base_price'] = df_display['base_price'].apply(lambda x: f"{x:.2f}")
+        df_display['after_discount'] = df_display['after_discount'].apply(lambda x: f"{x:.2f}")
+        df_display['after_code'] = df_display['after_code'].apply(lambda x: f"{x:.2f}")
+        df_display['cost'] = df_display['cost'].apply(lambda x: f"{x:.2f}")
+        df_display['profit_margin'] = df_display['profit_margin'].apply(lambda x: f"{x:.2f}%")
+        df_display['discount_percent'] = df_display['discount_percent'].apply(lambda x: f"{x:.2f}%")
+        df_display['net_profit'] = df_display['net_profit'].apply(lambda x: f"{x:.2f}")
         
         # تغيير أسماء الأعمدة للعربية
-        df_display = df.rename(columns={
+        df_display = df_display.rename(columns={
             'name': 'المنتج',
-            'category': 'الفئة',
             'base_price': 'السعر الأساسي',
             'after_discount': 'بعد الخصم',
             'after_code': 'بعد الكود',
@@ -548,21 +632,21 @@ def export_plan_to_excel(plan):
     ws['A1'] = "خطة التسعير"
     ws['A1'].font = Font(name="Arial", size=16, bold=True)
     ws['A1'].alignment = right_alignment
-    ws.merge_cells('A1:J1')
+    ws.merge_cells('A1:I1')
     
     ws['A2'] = f"الاسم: {plan['name']}"
     ws['A2'].alignment = right_alignment
-    ws.merge_cells('A2:J2')
+    ws.merge_cells('A2:I2')
     
     ws['A3'] = f"التاريخ: {plan.get('created_at', 'غير محدد')}"
     ws['A3'].alignment = right_alignment
-    ws.merge_cells('A3:J3')
+    ws.merge_cells('A3:I3')
     
     # الإحصائيات
     ws['A5'] = "📊 الإحصائيات"
     ws['A5'].font = Font(name="Arial", size=14, bold=True)
     ws['A5'].alignment = right_alignment
-    ws.merge_cells('A5:J5')
+    ws.merge_cells('A5:I5')
     
     stats = [
         ["إجمالي المنتجات", plan['analytics']['total_products']],
@@ -585,64 +669,63 @@ def export_plan_to_excel(plan):
     ws[f'A{row+1}'] = "📦 المنتجات"
     ws[f'A{row+1}'].font = Font(name="Arial", size=14, bold=True)
     ws[f'A{row+1}'].alignment = right_alignment
-    ws.merge_cells(f'A{row+1}:J{row+1}')
+    ws.merge_cells(f'A{row+1}:I{row+1}')
     
     # رؤوس الأعمدة
-    headers = ["المنتج", "الفئة", "السعر الأساسي", "بعد الخصم", "بعد الكود", "التكلفة", "نسبة الخصم", "نسبة الربح", "الربح الصافي", "الحالة"]
+    row += 2
+    headers = ['المنتج', 'السعر الأساسي', 'بعد الخصم', 'بعد الكود', 'التكلفة', 'نسبة الربح', 'نسبة الخصم', 'الربح الصافي', 'الحالة']
     
-    header_row = row + 2
-    for col_num, header in enumerate(headers, 1):
-        cell = ws.cell(row=header_row, column=col_num)
+    for col_idx, header in enumerate(headers, start=1):
+        cell = ws.cell(row=row, column=col_idx)
         cell.value = header
-        cell.fill = header_fill
         cell.font = header_font
+        cell.fill = header_fill
         cell.alignment = center_alignment
         cell.border = border
     
     # بيانات المنتجات
-    data_row = header_row + 1
     for product in plan['products']:
-        ws.cell(row=data_row, column=1, value=product['name'])
-        ws.cell(row=data_row, column=2, value=product['category'])
-        ws.cell(row=data_row, column=3, value=product['base_price'])
-        ws.cell(row=data_row, column=4, value=product['after_discount'])
-        ws.cell(row=data_row, column=5, value=product['after_code'])
-        ws.cell(row=data_row, column=6, value=product['cost'])
-        ws.cell(row=data_row, column=7, value=f"{product['discount_percent']:.2f}%")
-        ws.cell(row=data_row, column=8, value=f"{product['profit_margin']:.2f}%")
-        ws.cell(row=data_row, column=9, value=product['net_profit'])
+        row += 1
         
-        # الحالة
-        status_text = "ممتاز" if product['status'] == "excellent" else "جيد" if product['status'] == "good" else "تحذير"
-        ws.cell(row=data_row, column=10, value=status_text)
-        
-        # تلوين الصف حسب الحالة
-        if product['status'] == "excellent":
+        # تحديد لون الخلفية بناءً على نسبة الربح
+        if product['profit_margin'] >= 30:
             fill = green_fill
-        elif product['status'] == "good":
+        elif product['profit_margin'] >= 15:
             fill = yellow_fill
         else:
             fill = red_fill
         
-        for col in range(1, 11):
-            cell = ws.cell(row=data_row, column=col)
-            cell.fill = fill
+        data = [
+            product['name'],
+            f"{product['base_price']:.2f}",
+            f"{product['after_discount']:.2f}",
+            f"{product['after_code']:.2f}",
+            f"{product['cost']:.2f}",
+            f"{product['profit_margin']:.2f}%",
+            f"{product['discount_percent']:.2f}%",
+            f"{product['net_profit']:.2f}",
+            product['status']
+        ]
+        
+        for col_idx, value in enumerate(data, start=1):
+            cell = ws.cell(row=row, column=col_idx)
+            cell.value = value
             cell.alignment = center_alignment
             cell.border = border
-        
-        data_row += 1
+            
+            # تلوين خلية نسبة الربح
+            if col_idx == 6:
+                cell.fill = fill
     
-    # تعديل عرض الأعمدة
-    ws.column_dimensions['A'].width = 30
-    ws.column_dimensions['B'].width = 15
-    for col in ['C', 'D', 'E', 'F', 'G', 'H', 'I']:
-        ws.column_dimensions[col].width = 15
-    ws.column_dimensions['J'].width = 12
+    # ضبط عرض الأعمدة
+    column_widths = [25, 15, 15, 15, 15, 15, 15, 15, 12]
+    for idx, width in enumerate(column_widths, start=1):
+        ws.column_dimensions[chr(64 + idx)].width = width
     
     # حفظ الملف في الذاكرة
-    output = io.BytesIO()
-    wb.save(output)
-    output.seek(0)
+    excel_buffer = io.BytesIO()
+    wb.save(excel_buffer)
+    excel_buffer.seek(0)
     
-    return output.getvalue()
+    return excel_buffer.getvalue()
 
