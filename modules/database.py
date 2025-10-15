@@ -231,3 +231,49 @@ def clear_cache():
     st.cache_data.clear()
     st.success("✅ تم مسح الـ cache بنجاح!")
 
+
+
+
+def get_all_orders() -> List[Dict]:
+    """الحصول على جميع الطلبات بصيغة قائمة من القواميس (متوافق مع JSON القديم)"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # جلب جميع الطلبات
+        cursor.execute('''
+            SELECT 
+                order_id,
+                customer_name,
+                phone,
+                city,
+                total_amount,
+                order_status,
+                payment_method,
+                order_date
+            FROM orders
+            ORDER BY order_id DESC
+        ''')
+        
+        rows = cursor.fetchall()
+        
+        # تحويل إلى قائمة من القواميس بنفس أسماء الحقول القديمة
+        orders = []
+        for row in rows:
+            orders.append({
+                'رقم الطلب': row[0],
+                'اسم العميل': row[1],
+                'رقم الهاتف': row[2],
+                'المدينة': row[3],
+                'المبلغ الاجمالي': row[4],
+                'حالة الطلب': row[5],
+                ' طريقة الدفع': row[6],  # مع المسافة كما في JSON القديم
+                'تاريخ الطلب': row[7]
+            })
+        
+        return orders
+        
+    except Exception as e:
+        st.error(f"خطأ في الحصول على الطلبات: {e}")
+        return []
+
