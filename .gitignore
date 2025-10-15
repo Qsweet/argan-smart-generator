@@ -1,7 +1,50 @@
+# Streamlit
 .streamlit/secrets.toml
+.streamlit/config.toml
 secrets.toml
+
+# Python
 __pycache__/
+*.py[cod]
 *.pyc
 *.pyo
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Session
 .session.json
+
+# Database
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Backups
+backups/full-backup-*.tar.gz
+backups/files-backup-*.tar.gz
+backups/db-backup-*.tar.gz
+backups/*.info
+backups/archive/
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+
+# Large data files
+moraselaty_customers.json
+
+# Temporary
+*.tmp
+*.temp
