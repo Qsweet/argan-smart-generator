@@ -405,11 +405,16 @@ def create_new_pricing_plan():
 def load_campaigns():
     """تحميل الحملات من الملف"""
     try:
-        if os.path.exists("campaign_plans.json"):
-            with open("campaign_plans.json", "r", encoding="utf-8") as f:
-                return json.load(f)
+        if os.path.exists("moraselaty_campaigns.json"):
+            with open("moraselaty_campaigns.json", "r", encoding="utf-8") as f:
+                data = json.load(f)
+                # تحويل البيانات إلى الصيغة المتوقعة
+                if isinstance(data, list):
+                    return {"campaigns": data}
+                return data if "campaigns" in data else {"campaigns": []}
         return {"campaigns": []}
-    except:
+    except Exception as e:
+        st.error(f"خطأ في تحميل الحملات: {str(e)}")
         return {"campaigns": []}
 
 
