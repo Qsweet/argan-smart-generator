@@ -234,13 +234,18 @@ def create_new_pricing_plan():
                 key="new_product_name"
             )
         
+        # جلب بيانات التسعير التلقائية
+        pricing_data = get_product_pricing(product_name) if product_name else None
+        default_base_price = pricing_data["base_price"] if pricing_data else 100.0
+        
         with col2:
             base_price = st.number_input(
                 "السعر الأساسي:",
                 min_value=0.0,
-                value=100.0,
+                value=float(default_base_price),
                 step=1.0,
-                key="new_base_price"
+                key="new_base_price",
+                help="يتم ملؤه تلقائياً من قاعدة البيانات"
             )
         
         with col3:
@@ -419,15 +424,42 @@ def load_campaigns():
 
 
 def load_products_list():
-    """تحميل قائمة المنتجات من options.json"""
+    """تحميل قائمة المنتجات من products_pricing.json"""
     try:
-        if os.path.exists("options.json"):
+        if os.path.exists("products_pricing.json"):
+            with open("products_pricing.json", "r", encoding="utf-8") as f:
+                data = json.load(f)
+                products = data.get("products", [])
+                # إرجاع قائمة بأسماء المنتجات فقط
+                return [p["name"] for p in products if "name" in p]
+        # إذا لم يوجد الملف، جرب options.json
+        elif os.path.exists("options.json"):
             with open("options.json", "r", encoding="utf-8") as f:
                 data = json.load(f)
                 return data.get("products", [])
         return []
-    except:
+    except Exception as e:
+        st.error(f"خطأ في تحميل المنتجات: {str(e)}")
         return []
+
+
+def get_product_pricing(product_name):
+    """الحصول على بيانات التسعير لمنتج معين"""
+    try:
+        if os.path.exists("products_pricing.json"):
+            with open("products_pricing.json", "r", encoding="utf-8") as f:
+                data = json.load(f)
+                products = data.get("products", [])
+                for p in products:
+                    if p.get("name") == product_name:
+                        return {
+                            "base_price": p.get("base_price", 0),
+                            "after_discount": p.get("after_discount", 0),
+                            "after_code": p.get("after_code", 0)
+                        }
+        return None
+    except:
+        return None
 
 
 def get_ai_pricing_advice(products, base_discount, code_discount):
