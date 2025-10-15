@@ -129,10 +129,27 @@ def show_saved_plans(plans, products_pricing):
                 
                 with col1:
                     if st.button("✏️ تعديل الخطة", key=f"edit_plan_{plan_idx}", type="primary"):
+                        # تحويل البيانات إلى الصيغة الجديدة
+                        converted_products = []
+                        for p in plan['products']:
+                            converted_p = {
+                                'المنتج': p.get('المنتج', p.get('name', '')),
+                                'السعر الأساسي': p.get('السعر الأساسي', p.get('base_price', 0)),
+                                'نوع الخصم': p.get('نوع الخصم', 'نسبة مئوية'),
+                                'قيمة الخصم': p.get('قيمة الخصم', p.get('discount_percent', 10)),
+                                'السعر بعد الخصم': p.get('السعر بعد الخصم', p.get('after_code', 0)),
+                                'التكلفة': p.get('التكلفة', p.get('cost', 0)),
+                                'الربح الصافي': p.get('الربح الصافي', p.get('net_profit', 0)),
+                                'نسبة الربح %': p.get('نسبة الربح %', p.get('profit_margin', 0)),
+                                'الحالة': p.get('الحالة', '')
+                            }
+                            converted_products.append(converted_p)
+                        
                         st.session_state.editing_plan = plan_idx
-                        st.session_state.pricing_products = plan['products'].copy()
+                        st.session_state.pricing_products = converted_products
                         st.session_state.edit_plan_name = plan['name']
                         st.session_state.edit_plan_desc = plan.get('description', '')
+                        st.success("✅ تم تحميل الخطة للتعديل! انتقل إلى تبويب 'خطة جديدة'")
                         st.rerun()
                 
                 with col2:
