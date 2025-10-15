@@ -2016,8 +2016,9 @@ def create_moraselaty_campaign():
     # تحميل بيانات العملاء من SQLite
     try:
         from modules.database import get_all_orders
+        from datetime import datetime as dt
         orders = get_all_orders()
-        last_updated = datetime.now().strftime("%Y-%m-%d")
+        last_updated = dt.now().strftime("%Y-%m-%d")
     except Exception as e:
         st.error(f"❌ خطأ في تحميل بيانات العملاء: {e}")
         return

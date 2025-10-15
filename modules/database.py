@@ -240,19 +240,19 @@ def get_all_orders() -> List[Dict]:
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # جلب جميع الطلبات
+        # جلب جميع الطلبات (استخدام أسماء الأعمدة الصحيحة)
         cursor.execute('''
             SELECT 
-                order_id,
+                order_number,
                 customer_name,
                 phone,
                 city,
                 total_amount,
-                order_status,
+                status,
                 payment_method,
                 order_date
             FROM orders
-            ORDER BY order_id DESC
+            ORDER BY id DESC
         ''')
         
         rows = cursor.fetchall()
