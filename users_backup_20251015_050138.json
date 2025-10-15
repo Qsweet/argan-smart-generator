@@ -1,0 +1,22 @@
+{
+  "majed": {
+    "password": "1234",
+    "role": "admin"
+  },
+  "qudah": {
+    "password": "1234",
+    "role": "admin"
+  },
+  "samar": {
+    "password": "1234",
+    "role": "user"
+  },
+  "reem": {
+    "password": "1234",
+    "role": "user"
+  },
+  "abed": {
+    "password": "1234",
+    "role": "user"
+  }
+}

@@ -1,7 +1,32 @@
 {
-  "majed": {"password": "1234", "role": "admin"},
-  "qudah": {"password": "1234", "role": "admin"},
-  "samar": {"password": "1234", "role": "user"},
-  "reem": {"password": "1234", "role": "user"},
-  "abed": {"password": "1234", "role": "user"}
+  "majed": {
+    "password": "$2b$12$gThab/WDW942clUzGcyAZ.ZmNhyTWmqA66QzHJp6CNf.WHYNG0HGq",
+    "role": "admin",
+    "created_at": "2025-10-15T05:01:39.254261",
+    "password_changed_at": "2025-10-15T05:01:39.254293"
+  },
+  "qudah": {
+    "password": "$2b$12$0PO7fJhhDds45yZvk7iS/.4KsocUP/hMed.LFtwYG2JR606TduW6G",
+    "role": "admin",
+    "created_at": "2025-10-15T05:01:39.827553",
+    "password_changed_at": "2025-10-15T05:01:39.827573"
+  },
+  "samar": {
+    "password": "$2b$12$SLMkUa/6Zubj5iGMdOLZpurW1PgYOx2VPw8igVJ..bPQKzD/detj6",
+    "role": "user",
+    "created_at": "2025-10-15T05:01:40.403995",
+    "password_changed_at": "2025-10-15T05:01:40.404015"
+  },
+  "reem": {
+    "password": "$2b$12$mvfudmC2EKrPWBzwmPXjo.lka4M77VhLyqZFWeZerBYRcQaqFQ0ze",
+    "role": "user",
+    "created_at": "2025-10-15T05:01:40.978421",
+    "password_changed_at": "2025-10-15T05:01:40.978440"
+  },
+  "abed": {
+    "password": "$2b$12$48I7/hpOnSCZ6iyumcCr0uMKezb2/l849SzPK/p7zLEi7AEtvkx5u",
+    "role": "user",
+    "created_at": "2025-10-15T05:01:41.549191",
+    "password_changed_at": "2025-10-15T05:01:41.549211"
+  }
 }

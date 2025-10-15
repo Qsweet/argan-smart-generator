@@ -41,6 +41,7 @@ logs/
 # Environment
 .env
 .env.local
+!.env.example
 
 # Large data files
 moraselaty_customers.json

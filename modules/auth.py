@@ -6,20 +6,30 @@ Argan Smart Generator
 """
 
 import streamlit as st
-import hashlib
+import bcrypt
 import json
 import os
 from typing import Optional, Dict
+from datetime import datetime
 
 
 def hash_password(password: str) -> str:
-    """تشفير كلمة المرور باستخدام MD5"""
-    return hashlib.md5(password.encode()).hexdigest()
+    """تشفير كلمة المرور باستخدام bcrypt"""
+    password_bytes = password.encode('utf-8')
+    salt = bcrypt.gensalt(rounds=12)
+    hashed = bcrypt.hashpw(password_bytes, salt)
+    return hashed.decode('utf-8')
 
 
 def verify_password(password: str, hashed: str) -> bool:
     """التحقق من كلمة المرور"""
-    return hash_password(password) == hashed
+    try:
+        password_bytes = password.encode('utf-8')
+        hashed_bytes = hashed.encode('utf-8')
+        return bcrypt.checkpw(password_bytes, hashed_bytes)
+    except Exception as e:
+        print(f"خطأ في التحقق من كلمة المرور: {e}")
+        return False
 
 
 def init_session_state():
@@ -199,4 +209,93 @@ def delete_user(username: str) -> bool:
     
     del users[username]
     return save_users(users)
+
+
+
+
+# =============================================================================
+# Rate Limiting - حماية من هجمات brute force
+# =============================================================================
+
+def init_rate_limiting():
+    """تهيئة نظام تتبع محاولات تسجيل الدخول"""
+    if 'login_attempts' not in st.session_state:
+        st.session_state.login_attempts = {}
+    if 'blocked_users' not in st.session_state:
+        st.session_state.blocked_users = {}
+
+
+def is_user_blocked(username: str) -> bool:
+    """التحقق من أن المستخدم محظور"""
+    init_rate_limiting()
+    
+    if username in st.session_state.blocked_users:
+        block_time = st.session_state.blocked_users[username]
+        # فك الحظر بعد 15 دقيقة
+        if (datetime.now() - block_time).seconds > 900:  # 15 minutes
+            del st.session_state.blocked_users[username]
+            if username in st.session_state.login_attempts:
+                del st.session_state.login_attempts[username]
+            return False
+        return True
+    return False
+
+
+def record_failed_login(username: str):
+    """تسجيل محاولة تسجيل دخول فاشلة"""
+    init_rate_limiting()
+    
+    if username not in st.session_state.login_attempts:
+        st.session_state.login_attempts[username] = []
+    
+    # إضافة المحاولة الحالية
+    st.session_state.login_attempts[username].append(datetime.now())
+    
+    # حذف المحاولات القديمة (أكثر من 5 دقائق)
+    st.session_state.login_attempts[username] = [
+        attempt for attempt in st.session_state.login_attempts[username]
+        if (datetime.now() - attempt).seconds < 300  # 5 minutes
+    ]
+    
+    # حظر المستخدم إذا تجاوز 5 محاولات
+    if len(st.session_state.login_attempts[username]) >= 5:
+        st.session_state.blocked_users[username] = datetime.now()
+        return True
+    
+    return False
+
+
+def reset_login_attempts(username: str):
+    """إعادة تعيين محاولات تسجيل الدخول بعد نجاح"""
+    init_rate_limiting()
+    
+    if username in st.session_state.login_attempts:
+        del st.session_state.login_attempts[username]
+    if username in st.session_state.blocked_users:
+        del st.session_state.blocked_users[username]
+
+
+def get_remaining_attempts(username: str) -> int:
+    """الحصول على عدد المحاولات المتبقية"""
+    init_rate_limiting()
+    
+    if username not in st.session_state.login_attempts:
+        return 5
+    
+    attempts = len(st.session_state.login_attempts[username])
+    return max(0, 5 - attempts)
+
+
+def get_block_time_remaining(username: str) -> int:
+    """الحصول على الوقت المتبقي للحظر (بالثواني)"""
+    init_rate_limiting()
+    
+    if username not in st.session_state.blocked_users:
+        return 0
+    
+    block_time = st.session_state.blocked_users[username]
+    elapsed = (datetime.now() - block_time).seconds
+    remaining = max(0, 900 - elapsed)  # 15 minutes
+    
+    return remaining
 
