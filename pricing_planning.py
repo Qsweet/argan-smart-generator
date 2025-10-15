@@ -289,8 +289,8 @@ def create_new_plan(products_pricing):
             {
                 'المنتج': p['المنتج'],
                 'السعر الأساسي': f"{p['السعر الأساسي']:.0f}",
-                'نوع الخصم': p['نوع الخصم'],
-                'قيمة الخصم': f"{p['قيمة الخصم']:.0f}" if p['نوع الخصم'] == 'قيمة ثابتة' else f"{p['قيمة الخصم']:.1f}%",
+                'نوع الخصم': p.get('نوع الخصم', 'نسبة مئوية'),
+                'قيمة الخصم': f"{p.get('قيمة الخصم', 0):.0f}" if p.get('نوع الخصم', 'نسبة مئوية') == 'قيمة ثابتة' else f"{p.get('قيمة الخصم', 0):.1f}%",
                 'السعر النهائي': f"{p['السعر بعد الخصم']:.0f}",
                 'التكلفة': f"{p['التكلفة']:.0f}",
                 'الربح الصافي': f"{p['الربح الصافي']:.0f}",
@@ -326,7 +326,7 @@ def create_new_plan(products_pricing):
                     new_discount_type = st.selectbox(
                         "نوع الخصم:",
                         options=["نسبة مئوية", "قيمة ثابتة"],
-                        index=0 if product['نوع الخصم'] == "نسبة مئوية" else 1,
+                        index=0 if product.get('نوع الخصم', 'نسبة مئوية') == "نسبة مئوية" else 1,
                         key=f"edit_discount_type_{idx}"
                     )
                     
@@ -336,7 +336,7 @@ def create_new_plan(products_pricing):
                             "خصم %:",
                             min_value=0.0,
                             max_value=100.0,
-                            value=float(product['قيمة الخصم']) if product['نوع الخصم'] == "نسبة مئوية" else 10.0,
+                            value=float(product.get('قيمة الخصم', 10)) if product.get('نوع الخصم', 'نسبة مئوية') == "نسبة مئوية" else 10.0,
                             step=0.1,
                             key=f"edit_discount_{idx}"
                         )
@@ -344,8 +344,8 @@ def create_new_plan(products_pricing):
                         new_discount = st.number_input(
                             "خصم (ر.س):",
                             min_value=0.0,
-                            max_value=float(product['السعر الأساسي']),
-                            value=float(product['قيمة الخصم']) if product['نوع الخصم'] == "قيمة ثابتة" else 10.0,
+                            max_value=float(product.get('السعر الأساسي', 100)),
+                            value=float(product.get('قيمة الخصم', 10)) if product.get('نوع الخصم', 'نسبة مئوية') == "قيمة ثابتة" else 10.0,
                             step=1.0,
                             key=f"edit_discount_amount_{idx}"
                         )
@@ -354,7 +354,7 @@ def create_new_plan(products_pricing):
                     new_cost = st.number_input(
                         "تكلفة:",
                         min_value=0.0,
-                        value=float(product['التكلفة']),
+                        value=float(product.get('التكلفة', 0)),
                         step=1.0,
                         key=f"edit_cost_{idx}"
                     )
@@ -364,10 +364,11 @@ def create_new_plan(products_pricing):
                     with col_a:
                         if st.button("🔄", key=f"update_{idx}", help="تحديث"):
                             # إعادة الحساب
+                            base_price = product.get('السعر الأساسي', 0)
                             if new_discount_type == "نسبة مئوية":
-                                after_discount = product['السعر الأساسي'] * (1 - new_discount / 100)
+                                after_discount = base_price * (1 - new_discount / 100)
                             else:
-                                after_discount = product['السعر الأساسي'] - new_discount
+                                after_discount = base_price - new_discount
                             
                             # تقريب لأقرب رقم صحيح
                             after_discount = round(after_discount)
