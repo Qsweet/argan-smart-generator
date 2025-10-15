@@ -2135,7 +2135,7 @@ def create_moraselaty_campaign():
             status_filter = st.multiselect(
                 "اختر الحالات:",
                 ["الكل"] + statuses,
-                default=["تم توصيل الطلب"],
+                default=["الكل"],
                 key="status_filter"
             )
         
