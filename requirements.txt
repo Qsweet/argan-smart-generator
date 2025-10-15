@@ -1,7 +1,4 @@
 streamlit
-openai
 pandas
-plotly
-datetime
-hijri-converter
 openpyxl
+openai

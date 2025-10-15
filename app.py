@@ -980,8 +980,15 @@ def admin_dashboard():
             st.error(f"❌ خطأ في قراءة الملف: {str(e)}")
     
     # عرض آخر ملف محفوظ
-    elif os.path.exists("inventory_files"):
-        files = [f for f in os.listdir("inventory_files") if f.endswith(('.xlsx', '.xls'))]
+    else:
+        # التأكد من وجود المجلد
+        os.makedirs("inventory_files", exist_ok=True)
+        
+        if os.path.exists("inventory_files"):
+            files = [f for f in os.listdir("inventory_files") if f.endswith(('.xlsx', '.xls'))]
+        else:
+            files = []
+        
         if files:
             latest_file = max([f"inventory_files/{f}" for f in files], key=os.path.getmtime)
             
@@ -1006,12 +1013,98 @@ def admin_dashboard():
                 except Exception as e:
                     st.error(f"❌ خطأ: {str(e)}")
         else:
-            st.warning("⚠️ لا توجد ملفات جرد محفوظة")
-    else:
-        st.warning("⚠️ لم يتم رفع أي ملف جرد بعد. ارفع ملف Excel للبدء.")
+            st.warning("⚠️ لا توجد ملفات جرد محفوظة. ارفع ملف Excel للبدء.")
+    
+    # قسم النسخ الاحتياطي
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.divider()
+    st.markdown("💾 النسخ الاحتياطي والاستعادة")
+    
+    st.info("""
+        💡 **ملاحظة مهمة:** 
+        - قم بتحميل نسخة احتياطية قبل كل تحديث للتطبيق
+        - يتم حفظ جميع بياناتك (الحملات، العملاء، الإيرادات، إلخ)
+        - يمكنك استعادة البيانات بعد أي تحديث
+    """)
+    
+    col_backup1, col_backup2 = st.columns(2)
+    
+    with col_backup1:
+        st.markdown("📥 **تحميل نسخة احتياطية**")
+        if st.button("📥 إنشاء وتحميل نسخة احتياطية", use_container_width=True, type="primary"):
+            try:
+                from backup_utility import BackupManager
+                manager = BackupManager()
+                backup_path = manager.create_backup()
+                
+                # قراءة الملف للتحميل
+                with open(backup_path, "rb") as f:
+                    backup_data = f.read()
+                
+                st.success("✅ تم إنشاء النسخة الاحتياطية بنجاح!")
+                
+                st.download_button(
+                    label="⬇️ تحميل النسخة الاحتياطية",
+                    data=backup_data,
+                    file_name=os.path.basename(backup_path),
+                    mime="application/zip",
+                    use_container_width=True
+                )
+            except Exception as e:
+                st.error(f"❌ خطأ في إنشاء النسخة: {str(e)}")
+    
+    with col_backup2:
+        st.markdown("📤 **استعادة نسخة احتياطية**")
+        uploaded_backup = st.file_uploader(
+            "ارفع ملف النسخة الاحتياطية (ZIP):",
+            type=["zip"],
+            key="backup_restore_uploader"
+        )
+        
+        if uploaded_backup:
+            if st.button("🔄 استعادة البيانات", use_container_width=True, type="primary"):
+                try:
+                    # حفظ الملف مؤقتاً
+                    temp_path = f"/tmp/{uploaded_backup.name}"
+                    with open(temp_path, "wb") as f:
+                        f.write(uploaded_backup.getbuffer())
+                    
+                    from backup_utility import BackupManager
+                    manager = BackupManager()
+                    
+                    if manager.restore_backup(temp_path):
+                        st.success("✅ تم استعادة البيانات بنجاح!")
+                        st.balloons()
+                        st.info("🔄 يرجى إعادة تحميل الصفحة لرؤية البيانات المستعادة")
+                    else:
+                        st.error("❌ فشلت عملية الاستعادة")
+                except Exception as e:
+                    st.error(f"❌ خطأ في الاستعادة: {str(e)}")
+    
+    # عرض النسخ الاحتياطية المتاحة
+    st.markdown("<br>", unsafe_allow_html=True)
+    with st.expander("📁 عرض النسخ الاحتياطية المحفوظة"):
+        try:
+            from backup_utility import BackupManager
+            manager = BackupManager()
+            backups = manager.list_backups()
+            
+            if backups:
+                for backup in backups:
+                    col_b1, col_b2, col_b3 = st.columns([3, 2, 1])
+                    with col_b1:
+                        st.text(f"📦 {backup['filename']}")
+                    with col_b2:
+                        st.text(f"📅 {backup['date']}")
+                    with col_b3:
+                        st.text(f"📊 {backup['size_mb']:.2f} MB")
+            else:
+                st.info("💭 لا توجد نسخ احتياطية محفوظة")
+        except Exception as e:
+            st.error(f"❌ خطأ: {str(e)}")
 
 # ============================================
-# 📅 صفحة تخطيط الحملات (محسّنة ومتقدمة v5.1)
+# 📅 صفحة تخطيط الحملات (محسَّنة ومتقدمة v5.1)
 # ============================================
 def plan_campaign():
     load_custom_css()
@@ -2000,6 +2093,10 @@ def create_moraselaty_campaign():
         # الفلاتر
         col_f1, col_f2 = st.columns(2)
         
+        # تهيئة المتغيرات لتجنب UnboundLocalError
+        min_price = 0.0
+        max_price = 0.0
+        
         with col_f1:
             st.markdown("##### 💰 قيمة الطلبات")
             price_filter_type = st.selectbox(
@@ -2247,6 +2344,9 @@ def create_moraselaty_campaign():
             if product_name and product_url:
                 product_links.append({"name": product_name, "url": product_url})
         
+        # حفظ في session_state
+        st.session_state.saved_product_links = product_links
+        
         st.markdown("---")
         st.markdown("#### 4️⃣ معلومات الزر")
         
@@ -2358,14 +2458,14 @@ def create_moraselaty_campaign():
                         "id": len(campaigns_data["campaigns"]) + 1,
                         "name": f"حملة تسويقية - {datetime.now().strftime('%Y-%m-%d')}",
                         "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "created_by": st.session_state.username,
+                        "created_by": st.session_state.get('username', 'مجهول'),
                         "type": "marketing",
-                        "products": selected_products,
-                        "idea": campaign_idea,
-                        "product_links": product_links,
-                        "button_name": button_name,
-                        "button_url": button_url,
-                        "message": st.session_state.generated_campaign_text
+                        "products": st.session_state.get('marketing_products', []),
+                        "idea": st.session_state.get('campaign_idea', ''),
+                        "product_links": st.session_state.get('saved_product_links', []),
+                        "button_name": st.session_state.get('button_name', ''),
+                        "button_url": st.session_state.get('button_url', ''),
+                        "message": st.session_state.get('generated_campaign_text', '')
                     }
                     
                     campaigns_data["campaigns"].append(new_campaign)
@@ -2433,6 +2533,10 @@ def sidebar():
             if st.button("📱 حملات مراسلاتي", use_container_width=True):
                 st.session_state.page = "moraselaty"
                 st.rerun()
+            
+            if st.button("💰 تخطيط التسعير", use_container_width=True):
+                st.session_state.page = "pricing_planning"
+                st.rerun()
         
         st.markdown("---")
         
@@ -2482,6 +2586,9 @@ else:
         monthly_revenue_tracking()
     elif page == "moraselaty" and st.session_state.role == "admin":
         create_moraselaty_campaign()
+    elif page == "pricing_planning" and st.session_state.role == "admin":
+        from pricing_planning import pricing_planning
+        pricing_planning()
     else:
         home()
 
