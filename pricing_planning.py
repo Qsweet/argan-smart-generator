@@ -72,18 +72,108 @@ def pricing_planning():
         st.error("⚠️ لم يتم العثور على ملف products_pricing.json")
         return
     
-    # التبويبات
-    tab1, tab2 = st.tabs(["📋 الخطط المحفوظة", "➕ خطة جديدة"])
+    # التحقق من وضع التعديل
+    if 'editing_plan' in st.session_state:
+        # وضع التعديل
+        edit_plan_interface(products_pricing, pricing_plans)
+    else:
+        # الوضع العادي - التبويبات
+        tab1, tab2 = st.tabs(["📋 الخطط المحفوظة", "➕ خطة جديدة"])
+        
+        with tab1:
+            show_saved_plans(pricing_plans, products_pricing)
+        
+        with tab2:
+            create_new_plan(products_pricing)
+
+
+def edit_plan_interface(products_pricing, pricing_plans):
+    """واجهة تعديل الخطة"""
+    plan_idx = st.session_state.editing_plan
+    plan = pricing_plans[plan_idx]
     
-    with tab1:
-        show_saved_plans(pricing_plans, products_pricing)
+    st.info("📝 وضع التعديل - قم بتعديل الخطة ثم احفظ التغييرات")
     
-    with tab2:
-        create_new_plan(products_pricing)
+    # زر إلغاء التعديل
+    if st.button("❌ إلغاء التعديل والعودة", type="secondary"):
+        del st.session_state.editing_plan
+        if 'edit_plan_name' in st.session_state:
+            del st.session_state.edit_plan_name
+        if 'edit_plan_desc' in st.session_state:
+            del st.session_state.edit_plan_desc
+        st.session_state.pricing_products = []
+        st.rerun()
+    
+    st.markdown("---")
+    
+    # معلومات الخطة
+    col1, col2 = st.columns(2)
+    with col1:
+        plan_name = st.text_input(
+            "اسم الخطة:",
+            value=st.session_state.get('edit_plan_name', plan['name']),
+            key="edit_plan_name_input"
+        )
+    with col2:
+        plan_desc = st.text_input(
+            "الوصف:",
+            value=st.session_state.get('edit_plan_desc', plan.get('description', '')),
+            key="edit_plan_desc_input"
+        )
+    
+    st.markdown("---")
+    
+    # إضافة منتجات جديدة
+    st.subheader("🛍️ إضافة منتجات جديدة")
+    add_product_form(products_pricing)
+    
+    st.markdown("---")
+    
+    # عرض وتعديل المنتجات
+    if st.session_state.pricing_products:
+        st.subheader("📦 المنتجات في الخطة")
+        show_products_table()
+        edit_products_section()
+        show_statistics()
+        
+        st.markdown("---")
+        
+        # حفظ التعديلات
+        col1, col2 = st.columns([3, 1])
+        
+        with col1:
+            if st.button("💾 حفظ التعديلات", type="primary", use_container_width=True):
+                if not plan_name:
+                    st.error("⚠️ يرجى إدخال اسم للخطة")
+                else:
+                    pricing_plans[plan_idx] = {
+                        'name': plan_name,
+                        'description': plan_desc,
+                        'created_at': plan.get('created_at', datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+                        'updated_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        'products': st.session_state.pricing_products
+                    }
+                    
+                    if save_pricing_plans(pricing_plans):
+                        st.success("✅ تم حفظ التعديلات بنجاح!")
+                        del st.session_state.editing_plan
+                        del st.session_state.edit_plan_name
+                        del st.session_state.edit_plan_desc
+                        st.session_state.pricing_products = []
+                        st.rerun()
+        
+        with col2:
+            if st.button("🗑️ حذف الخطة", use_container_width=True):
+                pricing_plans.pop(plan_idx)
+                save_pricing_plans(pricing_plans)
+                del st.session_state.editing_plan
+                st.session_state.pricing_products = []
+                st.success("✅ تم حذف الخطة")
+                st.rerun()
 
 
 def show_saved_plans(plans, products_pricing):
-    """عرض وتعديل الخطط المحفوظة"""
+    """عرض الخطط المحفوظة"""
     st.subheader("📋 الخطط المحفوظة")
     
     if not plans:
@@ -95,7 +185,7 @@ def show_saved_plans(plans, products_pricing):
             st.write(f"**الوصف:** {plan.get('description', '-')}")
             
             if plan['products']:
-                # عرض الجدول بدون الحقول الإنجليزية
+                # عرض الجدول
                 display_df = pd.DataFrame([
                     {
                         'المنتج': p.get('المنتج', p.get('name', '')),
@@ -149,7 +239,6 @@ def show_saved_plans(plans, products_pricing):
                         st.session_state.pricing_products = converted_products
                         st.session_state.edit_plan_name = plan['name']
                         st.session_state.edit_plan_desc = plan.get('description', '')
-                        st.success("✅ تم تحميل الخطة للتعديل! انتقل إلى تبويب 'خطة جديدة'")
                         st.rerun()
                 
                 with col2:
@@ -161,32 +250,15 @@ def show_saved_plans(plans, products_pricing):
 
 
 def create_new_plan(products_pricing):
-    """إنشاء أو تعديل خطة"""
-    
-    # التحقق من وضع التعديل
-    is_editing = 'editing_plan' in st.session_state
-    
-    if is_editing:
-        st.subheader("✏️ تعديل الخطة")
-    else:
-        st.subheader("➕ خطة جديدة")
+    """إنشاء خطة جديدة"""
+    st.subheader("➕ خطة جديدة")
     
     # معلومات الخطة
     col1, col2 = st.columns(2)
     with col1:
-        plan_name = st.text_input(
-            "اسم الخطة:",
-            value=st.session_state.get('edit_plan_name', ''),
-            placeholder="مثال: خطة نوفمبر",
-            key="plan_name_input"
-        )
+        plan_name = st.text_input("اسم الخطة:", placeholder="مثال: خطة نوفمبر")
     with col2:
-        plan_desc = st.text_input(
-            "الوصف:",
-            value=st.session_state.get('edit_plan_desc', ''),
-            placeholder="وصف مختصر",
-            key="plan_desc_input"
-        )
+        plan_desc = st.text_input("الوصف:", placeholder="وصف مختصر")
     
     st.markdown("---")
     
@@ -196,7 +268,44 @@ def create_new_plan(products_pricing):
     
     # قسم إضافة المنتجات
     st.subheader("🛍️ إضافة المنتجات")
+    add_product_form(products_pricing)
     
+    st.markdown("---")
+    
+    # عرض المنتجات المضافة
+    if st.session_state.pricing_products:
+        st.subheader("📦 المنتجات المضافة")
+        show_products_table()
+        edit_products_section()
+        show_statistics()
+        
+        st.markdown("---")
+        
+        # حفظ الخطة
+        if st.button("💾 حفظ الخطة", type="primary", use_container_width=True):
+            if not plan_name:
+                st.error("⚠️ يرجى إدخال اسم للخطة")
+            else:
+                new_plan = {
+                    'name': plan_name,
+                    'description': plan_desc,
+                    'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    'products': st.session_state.pricing_products
+                }
+                
+                plans = load_pricing_plans()
+                plans.append(new_plan)
+                
+                if save_pricing_plans(plans):
+                    st.success("✅ تم حفظ الخطة بنجاح!")
+                    st.session_state.pricing_products = []
+                    st.rerun()
+    else:
+        st.info("👆 اختر منتجاً من الأعلى لإضافته")
+
+
+def add_product_form(products_pricing):
+    """نموذج إضافة منتج"""
     col1, col2, col3, col4, col5, col6 = st.columns([3, 1.5, 1, 1.5, 1.5, 1])
     
     with col1:
@@ -294,204 +403,143 @@ def create_new_plan(products_pricing):
                 st.session_state.pricing_products.append(new_product)
                 st.success(f"✅ تمت إضافة {selected_product}")
                 st.rerun()
+
+
+def show_products_table():
+    """عرض جدول المنتجات"""
+    display_df = pd.DataFrame([
+        {
+            'المنتج': p['المنتج'],
+            'السعر الأساسي': f"{p['السعر الأساسي']:.0f}",
+            'نوع الخصم': p['نوع الخصم'],
+            'قيمة الخصم': f"{p['قيمة الخصم']:.0f}" if p['نوع الخصم'] == 'قيمة ثابتة' else f"{p['قيمة الخصم']:.1f}%",
+            'السعر النهائي': f"{p['السعر بعد الخصم']:.0f}",
+            'التكلفة': f"{p['التكلفة']:.0f}",
+            'الربح الصافي': f"{p['الربح الصافي']:.0f}",
+            'نسبة الربح %': f"{p['نسبة الربح %']:.1f}",
+            'الحالة': p['الحالة']
+        }
+        for p in st.session_state.pricing_products
+    ])
     
-    st.markdown("---")
+    st.dataframe(display_df, use_container_width=True, hide_index=True)
+
+
+def edit_products_section():
+    """قسم تعديل المنتجات"""
+    st.write("**تعديل المنتجات:**")
     
-    # عرض المنتجات المضافة
-    if st.session_state.pricing_products:
-        st.subheader("📦 المنتجات المضافة")
+    num_products = len(st.session_state.pricing_products)
+    cols_per_row = min(3, num_products)
+    
+    for i in range(0, num_products, cols_per_row):
+        cols = st.columns(cols_per_row)
         
-        # إنشاء DataFrame للعرض (بدون حقول إنجليزية)
-        display_df = pd.DataFrame([
-            {
-                'المنتج': p['المنتج'],
-                'السعر الأساسي': f"{p['السعر الأساسي']:.0f}",
-                'نوع الخصم': p.get('نوع الخصم', 'نسبة مئوية'),
-                'قيمة الخصم': f"{p.get('قيمة الخصم', 0):.0f}" if p.get('نوع الخصم', 'نسبة مئوية') == 'قيمة ثابتة' else f"{p.get('قيمة الخصم', 0):.1f}%",
-                'السعر النهائي': f"{p['السعر بعد الخصم']:.0f}",
-                'التكلفة': f"{p['التكلفة']:.0f}",
-                'الربح الصافي': f"{p['الربح الصافي']:.0f}",
-                'نسبة الربح %': f"{p['نسبة الربح %']:.1f}",
-                'الحالة': p['الحالة']
-            }
-            for p in st.session_state.pricing_products
-        ])
-        
-        st.dataframe(display_df, use_container_width=True, hide_index=True)
-        
-        # أزرار التعديل والحذف
-        st.write("**تعديل المنتجات:**")
-        
-        num_products = len(st.session_state.pricing_products)
-        cols_per_row = min(3, num_products)  # 3 منتجات كحد أقصى في الصف
-        
-        for i in range(0, num_products, cols_per_row):
-            cols = st.columns(cols_per_row)
-            
-            for j, col in enumerate(cols):
-                idx = i + j
-                if idx >= num_products:
-                    break
-                    
-                with col:
-                    product = st.session_state.pricing_products[idx]
-                    product_name = product['المنتج']
-                    
-                    st.write(f"**{product_name[:25]}...**" if len(product_name) > 25 else f"**{product_name}**")
-                    
-                    # نوع الخصم
-                    new_discount_type = st.selectbox(
-                        "نوع الخصم:",
-                        options=["نسبة مئوية", "قيمة ثابتة"],
-                        index=0 if product.get('نوع الخصم', 'نسبة مئوية') == "نسبة مئوية" else 1,
-                        key=f"edit_discount_type_{idx}"
-                    )
-                    
-                    # قيمة الخصم
-                    if new_discount_type == "نسبة مئوية":
-                        new_discount = st.number_input(
-                            "خصم %:",
-                            min_value=0.0,
-                            max_value=100.0,
-                            value=float(product.get('قيمة الخصم', 10)) if product.get('نوع الخصم', 'نسبة مئوية') == "نسبة مئوية" else 10.0,
-                            step=0.1,
-                            key=f"edit_discount_{idx}"
-                        )
-                    else:
-                        new_discount = st.number_input(
-                            "خصم (ر.س):",
-                            min_value=0.0,
-                            max_value=float(product.get('السعر الأساسي', 100)),
-                            value=float(product.get('قيمة الخصم', 10)) if product.get('نوع الخصم', 'نسبة مئوية') == "قيمة ثابتة" else 10.0,
-                            step=1.0,
-                            key=f"edit_discount_amount_{idx}"
-                        )
-                    
-                    # تعديل التكلفة
-                    new_cost = st.number_input(
-                        "تكلفة:",
+        for j, col in enumerate(cols):
+            idx = i + j
+            if idx >= num_products:
+                break
+                
+            with col:
+                product = st.session_state.pricing_products[idx]
+                product_name = product['المنتج']
+                
+                st.write(f"**{product_name[:25]}...**" if len(product_name) > 25 else f"**{product_name}**")
+                
+                # نوع الخصم
+                new_discount_type = st.selectbox(
+                    "نوع الخصم:",
+                    options=["نسبة مئوية", "قيمة ثابتة"],
+                    index=0 if product.get('نوع الخصم', 'نسبة مئوية') == "نسبة مئوية" else 1,
+                    key=f"edit_discount_type_{idx}"
+                )
+                
+                # قيمة الخصم
+                if new_discount_type == "نسبة مئوية":
+                    new_discount = st.number_input(
+                        "خصم %:",
                         min_value=0.0,
-                        value=float(product.get('التكلفة', 0)),
-                        step=1.0,
-                        key=f"edit_cost_{idx}"
+                        max_value=100.0,
+                        value=float(product.get('قيمة الخصم', 10)) if product.get('نوع الخصم', 'نسبة مئوية') == "نسبة مئوية" else 10.0,
+                        step=0.1,
+                        key=f"edit_discount_{idx}"
                     )
-                    
-                    col_a, col_b = st.columns(2)
-                    
-                    with col_a:
-                        if st.button("🔄", key=f"update_{idx}", help="تحديث"):
-                            # إعادة الحساب
-                            base_price = product.get('السعر الأساسي', 0)
-                            if new_discount_type == "نسبة مئوية":
-                                after_discount = base_price * (1 - new_discount / 100)
-                            else:
-                                after_discount = base_price - new_discount
-                            
-                            # تقريب لأقرب رقم صحيح
-                            after_discount = round(after_discount)
-                            
-                            net_profit = after_discount - new_cost
-                            profit_margin = (net_profit / after_discount) * 100 if after_discount > 0 else 0
-                            
-                            if profit_margin >= 30:
-                                status = "ممتاز 🟢"
-                            elif profit_margin >= 15:
-                                status = "جيد 🟠"
-                            else:
-                                status = "تحذير 🔴"
-                            
-                            st.session_state.pricing_products[idx].update({
-                                'نوع الخصم': new_discount_type,
-                                'قيمة الخصم': round(new_discount, 1) if new_discount_type == "نسبة مئوية" else round(new_discount),
-                                'السعر بعد الخصم': after_discount,
-                                'التكلفة': round(new_cost),
-                                'الربح الصافي': round(net_profit),
-                                'نسبة الربح %': round(profit_margin, 1),
-                                'الحالة': status
-                            })
-                            st.success("✅ تم التحديث!")
-                            st.rerun()
-                    
-                    with col_b:
-                        if st.button("🗑️", key=f"delete_{idx}", help="حذف"):
-                            st.session_state.pricing_products.pop(idx)
-                            st.rerun()
-        
-        st.markdown("---")
-        
-        # الإحصائيات
-        st.subheader("📊 الإحصائيات الإجمالية")
-        
-        total_products = len(st.session_state.pricing_products)
-        total_revenue = sum(p['السعر بعد الخصم'] for p in st.session_state.pricing_products)
-        total_cost = sum(p['التكلفة'] for p in st.session_state.pricing_products)
-        total_profit = sum(p['الربح الصافي'] for p in st.session_state.pricing_products)
-        avg_profit_margin = sum(p['نسبة الربح %'] for p in st.session_state.pricing_products) / total_products if total_products > 0 else 0
-        
-        col1, col2, col3, col4, col5 = st.columns(5)
-        
-        col1.metric("📦 المنتجات", total_products)
-        col2.metric("💰 الإيرادات", f"{total_revenue:.0f} ر.س")
-        col3.metric("💵 التكلفة", f"{total_cost:.0f} ر.س")
-        col4.metric("📈 الربح", f"{total_profit:.0f} ر.س")
-        col5.metric("📊 متوسط الربح", f"{avg_profit_margin:.1f}%")
-        
-        st.markdown("---")
-        
-        # حفظ أو تحديث الخطة
-        col1, col2 = st.columns([3, 1])
-        
-        with col1:
-            if is_editing:
-                if st.button("💾 حفظ التعديلات", type="primary", use_container_width=True):
-                    if not plan_name:
-                        st.error("⚠️ يرجى إدخال اسم للخطة")
-                    else:
-                        plans = load_pricing_plans()
-                        plans[st.session_state.editing_plan] = {
-                            'name': plan_name,
-                            'description': plan_desc,
-                            'created_at': plans[st.session_state.editing_plan]['created_at'],
-                            'updated_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                            'products': st.session_state.pricing_products
-                        }
+                else:
+                    new_discount = st.number_input(
+                        "خصم (ر.س):",
+                        min_value=0.0,
+                        max_value=float(product.get('السعر الأساسي', 100)),
+                        value=float(product.get('قيمة الخصم', 10)) if product.get('نوع الخصم', 'نسبة مئوية') == "قيمة ثابتة" else 10.0,
+                        step=1.0,
+                        key=f"edit_discount_amount_{idx}"
+                    )
+                
+                # تعديل التكلفة
+                new_cost = st.number_input(
+                    "تكلفة:",
+                    min_value=0.0,
+                    value=float(product.get('التكلفة', 0)),
+                    step=1.0,
+                    key=f"edit_cost_{idx}"
+                )
+                
+                col_a, col_b = st.columns(2)
+                
+                with col_a:
+                    if st.button("🔄", key=f"update_{idx}", help="تحديث"):
+                        # إعادة الحساب
+                        base_price = product.get('السعر الأساسي', 0)
+                        if new_discount_type == "نسبة مئوية":
+                            after_discount = base_price * (1 - new_discount / 100)
+                        else:
+                            after_discount = base_price - new_discount
                         
-                        if save_pricing_plans(plans):
-                            st.success("✅ تم حفظ التعديلات بنجاح!")
-                            # تنظيف session_state
-                            del st.session_state.editing_plan
-                            del st.session_state.edit_plan_name
-                            del st.session_state.edit_plan_desc
-                            st.session_state.pricing_products = []
-                            st.rerun()
-            else:
-                if st.button("💾 حفظ الخطة", type="primary", use_container_width=True):
-                    if not plan_name:
-                        st.error("⚠️ يرجى إدخال اسم للخطة")
-                    else:
-                        new_plan = {
-                            'name': plan_name,
-                            'description': plan_desc,
-                            'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                            'products': st.session_state.pricing_products
-                        }
+                        # تقريب لأقرب رقم صحيح
+                        after_discount = round(after_discount)
                         
-                        plans = load_pricing_plans()
-                        plans.append(new_plan)
+                        net_profit = after_discount - new_cost
+                        profit_margin = (net_profit / after_discount) * 100 if after_discount > 0 else 0
                         
-                        if save_pricing_plans(plans):
-                            st.success("✅ تم حفظ الخطة بنجاح!")
-                            st.session_state.pricing_products = []
-                            st.rerun()
-        
-        with col2:
-            if is_editing:
-                if st.button("❌ إلغاء التعديل", use_container_width=True):
-                    del st.session_state.editing_plan
-                    del st.session_state.edit_plan_name
-                    del st.session_state.edit_plan_desc
-                    st.session_state.pricing_products = []
-                    st.rerun()
-    else:
-        st.info("👆 اختر منتجاً من الأعلى لإضافته")
+                        if profit_margin >= 30:
+                            status = "ممتاز 🟢"
+                        elif profit_margin >= 15:
+                            status = "جيد 🟠"
+                        else:
+                            status = "تحذير 🔴"
+                        
+                        st.session_state.pricing_products[idx].update({
+                            'نوع الخصم': new_discount_type,
+                            'قيمة الخصم': round(new_discount, 1) if new_discount_type == "نسبة مئوية" else round(new_discount),
+                            'السعر بعد الخصم': after_discount,
+                            'التكلفة': round(new_cost),
+                            'الربح الصافي': round(net_profit),
+                            'نسبة الربح %': round(profit_margin, 1),
+                            'الحالة': status
+                        })
+                        st.success("✅ تم التحديث!")
+                        st.rerun()
+                
+                with col_b:
+                    if st.button("🗑️", key=f"delete_{idx}", help="حذف"):
+                        st.session_state.pricing_products.pop(idx)
+                        st.rerun()
+
+
+def show_statistics():
+    """عرض الإحصائيات"""
+    st.subheader("📊 الإحصائيات الإجمالية")
+    
+    total_products = len(st.session_state.pricing_products)
+    total_revenue = sum(p['السعر بعد الخصم'] for p in st.session_state.pricing_products)
+    total_cost = sum(p['التكلفة'] for p in st.session_state.pricing_products)
+    total_profit = sum(p['الربح الصافي'] for p in st.session_state.pricing_products)
+    avg_profit_margin = sum(p['نسبة الربح %'] for p in st.session_state.pricing_products) / total_products if total_products > 0 else 0
+    
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    col1.metric("📦 المنتجات", total_products)
+    col2.metric("💰 الإيرادات", f"{total_revenue:.0f} ر.س")
+    col3.metric("💵 التكلفة", f"{total_cost:.0f} ر.س")
+    col4.metric("📈 الربح", f"{total_profit:.0f} ر.س")
+    col5.metric("📊 متوسط الربح", f"{avg_profit_margin:.1f}%")
 
