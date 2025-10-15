@@ -2013,14 +2013,13 @@ def create_moraselaty_campaign():
         </div>
     """, unsafe_allow_html=True)
     
-    # تحميل بيانات العملاء
+    # تحميل بيانات العملاء من SQLite
     try:
-        with open("moraselaty_customers.json", "r", encoding="utf-8") as f:
-            customers_data = json.load(f)
-        orders = customers_data.get("orders", [])
-        last_updated = customers_data.get("last_updated", "غير معروف")
-    except:
-        st.error("❌ لم يتم العثور على بيانات العملاء!")
+        from modules.database import get_all_orders
+        orders = get_all_orders()
+        last_updated = datetime.now().strftime("%Y-%m-%d")
+    except Exception as e:
+        st.error(f"❌ خطأ في تحميل بيانات العملاء: {e}")
         return
     
     # إحصائيات سريعة
