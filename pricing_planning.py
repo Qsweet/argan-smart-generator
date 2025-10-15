@@ -323,7 +323,7 @@ def add_product_form(products_pricing):
                 "السعر الأساسي:",
                 value=float(product_data['base_price']),
                 disabled=True,
-                key="base_price_show"
+                key=f"base_price_show_{selected_product}"
             )
         
         with col3:
@@ -342,7 +342,7 @@ def add_product_form(products_pricing):
                     max_value=100.0,
                     value=float(default_discount),
                     step=0.1,
-                    key="discount_input"
+                    key=f"discount_input_{selected_product}_{discount_type}"
                 )
             else:
                 default_discount_amount = product_data['base_price'] - product_data['after_code']
@@ -352,7 +352,7 @@ def add_product_form(products_pricing):
                     max_value=float(base_price),
                     value=float(default_discount_amount),
                     step=1.0,
-                    key="discount_amount_input"
+                    key=f"discount_amount_input_{selected_product}_{discount_type}"
                 )
         
         with col5:
@@ -361,7 +361,7 @@ def add_product_form(products_pricing):
                 min_value=0.0,
                 value=product_data['after_code'] * 0.5,
                 step=1.0,
-                key="cost_input"
+                key=f"cost_input_{selected_product}"
             )
         
         with col6:
