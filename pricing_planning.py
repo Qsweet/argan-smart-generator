@@ -408,15 +408,17 @@ def create_new_pricing_plan():
 
 
 def load_campaigns():
-    """تحميل الحملات من الملف"""
+    """تحميل الحملات من قسم تخطيط الحملات (campaign_plans.json)"""
     try:
-        if os.path.exists("moraselaty_campaigns.json"):
-            with open("moraselaty_campaigns.json", "r", encoding="utf-8") as f:
-                data = json.load(f)
-                # تحويل البيانات إلى الصيغة المتوقعة
-                if isinstance(data, list):
-                    return {"campaigns": data}
-                return data if "campaigns" in data else {"campaigns": []}
+        if os.path.exists("campaign_plans.json"):
+            with open("campaign_plans.json", "r", encoding="utf-8") as f:
+                campaigns = json.load(f)
+                # فقط الحملات القادمة (غير المحذوفة)
+                active_campaigns = [
+                    c for c in campaigns 
+                    if "deleted_at" not in c and c.get("status") != "deleted"
+                ]
+                return {"campaigns": active_campaigns}
         return {"campaigns": []}
     except Exception as e:
         st.error(f"خطأ في تحميل الحملات: {str(e)}")
