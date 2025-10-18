@@ -2003,6 +2003,9 @@ def monthly_revenue_tracking():
 # 📱 حملات مراسلاتي
 # ============================================
 def create_moraselaty_campaign():
+    import json
+    import os
+    
     load_custom_css()
     
     st.markdown("""
@@ -2023,8 +2026,6 @@ def create_moraselaty_campaign():
     except Exception as e:
         # إذا فشل، حاول التحميل من JSON
         try:
-            import json
-            import os
             if os.path.exists("moraselaty_customers.json"):
                 with open("moraselaty_customers.json", "r", encoding="utf-8") as f:
                     data = json.load(f)
