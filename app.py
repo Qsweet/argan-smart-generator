@@ -238,8 +238,9 @@ def verify_password(password, hashed):
 # ============================================
 # 🧩 تحميل الملفات الأساسية مع معالجة الأخطاء
 # ============================================
+@st.cache_data(ttl=300)  # Cache لمدة 5 دقائق
 def load_json(path):
-    """تحميل ملف JSON مع معالجة أفضل للأخطاء"""
+    """تحميل ملف JSON مع معالجة أفضل للأخطاء (cached)"""
     try:
         if not os.path.exists(path):
             # إنشاء ملف فارغ إذا لم يكن موجوداً
@@ -2012,14 +2013,14 @@ def create_moraselaty_campaign():
         </div>
     """, unsafe_allow_html=True)
     
-    # تحميل بيانات العملاء
+    # تحميل بيانات العملاء من SQLite
     try:
-        with open("moraselaty_customers.json", "r", encoding="utf-8") as f:
-            customers_data = json.load(f)
-        orders = customers_data.get("orders", [])
-        last_updated = customers_data.get("last_updated", "غير معروف")
-    except:
-        st.error("❌ لم يتم العثور على بيانات العملاء!")
+        from modules.database import get_all_orders
+        from datetime import datetime as dt
+        orders = get_all_orders()
+        last_updated = dt.now().strftime("%Y-%m-%d")
+    except Exception as e:
+        st.error(f"❌ خطأ في تحميل بيانات العملاء: {e}")
         return
     
     # إحصائيات سريعة
@@ -2134,7 +2135,7 @@ def create_moraselaty_campaign():
             status_filter = st.multiselect(
                 "اختر الحالات:",
                 ["الكل"] + statuses,
-                default=["تم توصيل الطلب"],
+                default=["الكل"],
                 key="status_filter"
             )
         

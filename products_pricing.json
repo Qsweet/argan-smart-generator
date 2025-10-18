@@ -1,376 +1,436 @@
 {
-  "products": [
-    {
-      "name": "لتر زيت الارغان الصافي",
-      "base_price": 589.0,
-      "after_discount": 495.0,
-      "after_code": 489.0
-    },
-    {
-      "name": "نصف لتر زيت الارغان الصافي",
-      "base_price": 379.0,
-      "after_discount": 319.0,
-      "after_code": 309.0
-    },
-    {
-      "name": "ربع لتر زيت الارغان الصافي",
-      "base_price": 229.0,
-      "after_discount": 195.0,
-      "after_code": 189.0
-    },
-    {
-      "name": "زيت الارغان الصافي100 مل",
-      "base_price": 129.0,
-      "after_discount": 95.0,
-      "after_code": 90.0
-    },
-    {
-      "name": "زيت الارغان الصافي30 مل",
-      "base_price": 89.0,
-      "after_discount": 79.0,
-      "after_code": 69.0
-    },
-    {
-      "name": "لتر زيت الارغان بالمسك",
-      "base_price": 589.0,
-      "after_discount": 495.0,
-      "after_code": 489.0
-    },
-    {
-      "name": "نصف لتر زيت الارغان بالمسك",
-      "base_price": 379.0,
-      "after_discount": 319.0,
-      "after_code": 309.0
-    },
-    {
-      "name": "ربع لتر زيت الارغان بالمسك",
-      "base_price": 229.0,
-      "after_discount": 195.0,
-      "after_code": 189.0
-    },
-    {
-      "name": "زيت الارغان بالمسك100 مل",
-      "base_price": 129.0,
-      "after_discount": 95.0,
-      "after_code": 90.0
-    },
-    {
-      "name": "زيت الارغان بالمسك30 مل",
-      "base_price": 89.0,
-      "after_discount": 79.0,
-      "after_code": 69.0
-    },
-    {
-      "name": "لتر زيت الارغان بالعود",
-      "base_price": 589.0,
-      "after_discount": 495.0,
-      "after_code": 489.0
-    },
-    {
-      "name": "نصف لتر زيت الارغان بالعود",
-      "base_price": 379.0,
-      "after_discount": 319.0,
-      "after_code": 309.0
-    },
-    {
-      "name": "ربع لتر زيت الارغان بالعود",
-      "base_price": 229.0,
-      "after_discount": 195.0,
-      "after_code": 189.0
-    },
-    {
-      "name": "زيت الارغان بالعود100 مل",
-      "base_price": 129.0,
-      "after_discount": 95.0,
-      "after_code": 90.0
-    },
-    {
-      "name": "زيت الارغان بالعود30 مل",
-      "base_price": 89.0,
-      "after_discount": 79.0,
-      "after_code": 69.0
-    },
-    {
-      "name": "الأملو بالعسل وزيت الأرجان كيلو",
-      "base_price": 239.0,
-      "after_discount": 180.0,
-      "after_code": 175.0
-    },
-    {
-      "name": "الأملو بالعسل وزيت الأرجان نصف كيلو",
-      "base_price": 149.0,
-      "after_discount": 109.0,
-      "after_code": 102.0
-    },
-    {
-      "name": "الأملو بالعسل وزيت الأرجان ربع كيلو",
-      "base_price": 109.0,
-      "after_discount": 69.0,
-      "after_code": 59.0
-    },
-    {
-      "name": "الاملو بدون عسل كيلو",
-      "base_price": 220.0,
-      "after_discount": 209.0,
-      "after_code": 201.0
-    },
-    {
-      "name": "الاملو بدون عسل نص كيلو",
-      "base_price": 135.0,
-      "after_discount": 125.0,
-      "after_code": 115.0
-    },
-    {
-      "name": "الاملو بدون عسل ربع كيلو",
-      "base_price": 89.0,
-      "after_discount": 85.0,
-      "after_code": 80.0
-    },
-    {
-      "name": "الأملو بالعسل وزيت الزيتون 250 جرام",
-      "base_price": 99.0,
-      "after_discount": 89.0,
-      "after_code": 79.0
-    },
-    {
-      "name": "زيت الأرجان المحمص للأكل",
-      "base_price": 129.0,
-      "after_discount": 119.0,
-      "after_code": 109.0
-    },
-    {
-      "name": "شامبو بزيت الأرجان (جميع الأنواع)",
-      "base_price": 67.0,
-      "after_discount": 57.0,
-      "after_code": 47.0
-    },
-    {
-      "name": "بلسم بزيت الأرجان (جميع الأنواع)",
-      "base_price": 89.0,
-      "after_discount": 79.0,
-      "after_code": 69.0
-    },
-    {
-      "name": "مقشر الجسم بزيت الأرجان وملح البحر",
-      "base_price": 109.0,
-      "after_discount": 89.0,
-      "after_code": 79.0
-    },
-    {
-      "name": "مقشر الجسم بزيت الأرجان والبرتقال والعسل",
-      "base_price": 109.0,
-      "after_discount": 89.0,
-      "after_code": 79.0
-    },
-    {
-      "name": "مقشر الجسم بزيت الأرجان والقهوة",
-      "base_price": 99.0,
-      "after_discount": 89.0,
-      "after_code": 79.0
-    },
-    {
-      "name": "مقشر الوجه بالنيلة",
-      "base_price": 109.0,
-      "after_discount": 95.0,
-      "after_code": 89.0
-    },
-    {
-      "name": "مقشر الوجه بالعكر",
-      "base_price": 109.0,
-      "after_discount": 0,
-      "after_code": 89.0
-    },
-    {
-      "name": "مقشر الوجه بالتين الشوكي 250 جرام",
-      "base_price": 109.0,
-      "after_discount": 95.0,
-      "after_code": 89.0
-    },
-    {
-      "name": "ماء الورد الطبيعي 250 مل",
-      "base_price": 99.0,
-      "after_discount": 84.0,
-      "after_code": 74.0
-    },
-    {
-      "name": "ماء الخزامى",
-      "base_price": 59.0,
-      "after_discount": 52.0,
-      "after_code": 42.0
-    },
-    {
-      "name": "ماء البرتقال",
-      "base_price": 59.0,
-      "after_discount": 52.0,
-      "after_code": 42.0
-    },
-    {
-      "name": "حجر النيلة المغربية 200 جرام",
-      "base_price": 109.0,
-      "after_discount": 95.0,
-      "after_code": 79.0
-    },
-    {
-      "name": "النيلة المطحونة 200 جرام",
-      "base_price": 119.0,
-      "after_discount": 95.0,
-      "after_code": 89.0
-    },
-    {
-      "name": "النيلة المطحونة 5 جرام",
-      "base_price": 39.0,
-      "after_discount": 35.0,
-      "after_code": 25.0
-    },
-    {
-      "name": "العكر الفاسي المغربي 5 جرام",
-      "base_price": 85.0,
-      "after_discount": 75.0,
-      "after_code": 65.0
-    },
-    {
-      "name": "العكر الفاسي 3 جرام",
-      "base_price": 59.0,
-      "after_discount": 55.0,
-      "after_code": 45.0
-    },
-    {
-      "name": "ليفة الجسم",
-      "base_price": 35.0,
-      "after_discount": 27.0,
-      "after_code": 24.0
-    },
-    {
-      "name": "ليفة الظهر",
-      "base_price": 35.0,
-      "after_discount": 27.0,
-      "after_code": 24.0
-    },
-    {
-      "name": "مدق النيلة",
-      "base_price": 29.0,
-      "after_discount": 23.0,
-      "after_code": 19.0
-    },
-    {
-      "name": "الصابون بالارجان 300 جرام",
-      "base_price": 59.0,
-      "after_discount": 55.0,
-      "after_code": 45.0
-    },
-    {
-      "name": "الصابون بالارجان والخزامى 300 جرام",
-      "base_price": 65.0,
-      "after_discount": 59.0,
-      "after_code": 49.0
-    },
-    {
-      "name": "الصابون بالارجان والمسك 300 جرام",
-      "base_price": 65.0,
-      "after_discount": 59.0,
-      "after_code": 49.0
-    },
-    {
-      "name": "زيت التين الشوكي 30 مل",
-      "base_price": 129.0,
-      "after_discount": 95.0,
-      "after_code": 89.0
-    },
-    {
-      "name": "زيت السمسم 1000 مل",
-      "base_price": 39.0,
-      "after_discount": 35.0,
-      "after_code": 32.0
-    },
-    {
-      "name": "زيت السمسم 500 مل",
-      "base_price": 25.0,
-      "after_discount": 22.0,
-      "after_code": 19.0
-    },
-    {
-      "name": "الزيت المغذي باكليل الجبل",
-      "base_price": 119.0,
-      "after_discount": 95.0,
-      "after_code": 69.0
-    },
-    {
-      "name": "سيروم الزيوت السبعة 120 مل",
-      "base_price": 119.0,
-      "after_discount": 95.0,
-      "after_code": 69.0
-    },
-    {
-      "name": "لوشن الجسم بالارجان",
-      "base_price": 99.0,
-      "after_discount": 84.0,
-      "after_code": 74.0
-    },
-    {
-      "name": "بلسم الجسم بالأرجان",
-      "base_price": 99.0,
-      "after_discount": 95.0,
-      "after_code": 84.0
-    },
-    {
-      "name": "كريم الجسم بالارجان",
-      "base_price": 104.0,
-      "after_discount": 95.0,
-      "after_code": 89.0
-    },
-    {
-      "name": "الطاجن الكبير",
-      "base_price": 249.0,
-      "after_discount": 195.0,
-      "after_code": 190.0
-    },
-    {
-      "name": "الطاجن الوسط",
-      "base_price": 199.0,
-      "after_discount": 95.0,
-      "after_code": 90.0
-    },
-    {
-      "name": "الطاجن الصغير",
-      "base_price": 149.0,
-      "after_discount": 75.0,
-      "after_code": 70.0
-    },
-    {
-      "name": "عبوات السفر",
-      "base_price": 20.0,
-      "after_discount": 18.0,
-      "after_code": 15.0
-    },
-    {
-      "name": "فرشاة الاظافر",
-      "base_price": 19.0,
-      "after_discount": 15.0,
-      "after_code": 12.0
-    },
-    {
-      "name": "فرشاة الشعر",
-      "base_price": 24.0,
-      "after_discount": 19.0,
-      "after_code": 16.0
-    },
-    {
-      "name": "عسل السدر 1000 جرام",
-      "base_price": 129.0,
-      "after_discount": 95.0,
-      "after_code": 88.0
-    },
-    {
-      "name": "عسل السدر 500 جرام",
-      "base_price": 79.0,
-      "after_discount": 59.0,
-      "after_code": 49.0
-    },
-    {
-      "name": "مجموعة النيلة",
-      "base_price": 139.0,
-      "after_discount": 108.0,
-      "after_code": 98.0
-    }
-  ]
+  "لتر زيت الارغان الصافي": {
+    "base_price": 589.0,
+    "after_discount": 495.0,
+    "after_code": 489.0,
+    "base_discount_percent": 15.96,
+    "code_discount_percent": 1.21
+  },
+  "نصف لتر زيت الارغان الصافي": {
+    "base_price": 379.0,
+    "after_discount": 319.0,
+    "after_code": 309.0,
+    "base_discount_percent": 15.83,
+    "code_discount_percent": 3.13
+  },
+  "ربع لتر زيت الارغان الصافي": {
+    "base_price": 229.0,
+    "after_discount": 195.0,
+    "after_code": 189.0,
+    "base_discount_percent": 14.85,
+    "code_discount_percent": 3.08
+  },
+  "زيت الارغان الصافي100 مل": {
+    "base_price": 129.0,
+    "after_discount": 95.0,
+    "after_code": 90.0,
+    "base_discount_percent": 26.36,
+    "code_discount_percent": 5.26
+  },
+  "زيت الارغان الصافي30 مل": {
+    "base_price": 89.0,
+    "after_discount": 79.0,
+    "after_code": 69.0,
+    "base_discount_percent": 11.24,
+    "code_discount_percent": 12.66
+  },
+  "لتر زيت الارغان بالمسك": {
+    "base_price": 589.0,
+    "after_discount": 495.0,
+    "after_code": 489.0,
+    "base_discount_percent": 15.96,
+    "code_discount_percent": 1.21
+  },
+  "نصف لتر زيت الارغان بالمسك": {
+    "base_price": 379.0,
+    "after_discount": 319.0,
+    "after_code": 309.0,
+    "base_discount_percent": 15.83,
+    "code_discount_percent": 3.13
+  },
+  "ربع لتر زيت الارغان بالمسك": {
+    "base_price": 229.0,
+    "after_discount": 195.0,
+    "after_code": 189.0,
+    "base_discount_percent": 14.85,
+    "code_discount_percent": 3.08
+  },
+  "زيت الارغان بالمسك100 مل": {
+    "base_price": 129.0,
+    "after_discount": 95.0,
+    "after_code": 90.0,
+    "base_discount_percent": 26.36,
+    "code_discount_percent": 5.26
+  },
+  "زيت الارغان بالمسك30 مل": {
+    "base_price": 89.0,
+    "after_discount": 79.0,
+    "after_code": 69.0,
+    "base_discount_percent": 11.24,
+    "code_discount_percent": 12.66
+  },
+  "لتر زيت الارغان بالعود": {
+    "base_price": 589.0,
+    "after_discount": 495.0,
+    "after_code": 489.0,
+    "base_discount_percent": 15.96,
+    "code_discount_percent": 1.21
+  },
+  "نصف لتر زيت الارغان بالعود": {
+    "base_price": 379.0,
+    "after_discount": 319.0,
+    "after_code": 309.0,
+    "base_discount_percent": 15.83,
+    "code_discount_percent": 3.13
+  },
+  "ربع لتر زيت الارغان بالعود": {
+    "base_price": 229.0,
+    "after_discount": 195.0,
+    "after_code": 189.0,
+    "base_discount_percent": 14.85,
+    "code_discount_percent": 3.08
+  },
+  "زيت الارغان بالعود100 مل": {
+    "base_price": 129.0,
+    "after_discount": 95.0,
+    "after_code": 90.0,
+    "base_discount_percent": 26.36,
+    "code_discount_percent": 5.26
+  },
+  "زيت الارغان بالعود30 مل": {
+    "base_price": 89.0,
+    "after_discount": 79.0,
+    "after_code": 69.0,
+    "base_discount_percent": 11.24,
+    "code_discount_percent": 12.66
+  },
+  "الأملو بالعسل وزيت الأرجان كيلو": {
+    "base_price": 239.0,
+    "after_discount": 180.0,
+    "after_code": 175.0,
+    "base_discount_percent": 24.69,
+    "code_discount_percent": 2.78
+  },
+  "الأملو بالعسل وزيت الأرجان نصف كيلو": {
+    "base_price": 149.0,
+    "after_discount": 109.0,
+    "after_code": 102.0,
+    "base_discount_percent": 26.85,
+    "code_discount_percent": 6.42
+  },
+  "الأملو بالعسل وزيت الأرجان ربع كيلو": {
+    "base_price": 109.0,
+    "after_discount": 69.0,
+    "after_code": 59.0,
+    "base_discount_percent": 36.7,
+    "code_discount_percent": 14.49
+  },
+  "الاملو بدون عسل كيلو": {
+    "base_price": 220.0,
+    "after_discount": 209.0,
+    "after_code": 201.0,
+    "base_discount_percent": 5.0,
+    "code_discount_percent": 3.83
+  },
+  "الاملو بدون عسل نص كيلو": {
+    "base_price": 135.0,
+    "after_discount": 125.0,
+    "after_code": 115.0,
+    "base_discount_percent": 7.41,
+    "code_discount_percent": 8.0
+  },
+  "الاملو بدون عسل ربع كيلو": {
+    "base_price": 89.0,
+    "after_discount": 85.0,
+    "after_code": 80.0,
+    "base_discount_percent": 4.49,
+    "code_discount_percent": 5.88
+  },
+  "الأملو بالعسل وزيت الزيتون 250 جرام": {
+    "base_price": 99.0,
+    "after_discount": 89.0,
+    "after_code": 79.0,
+    "base_discount_percent": 10.1,
+    "code_discount_percent": 11.24
+  },
+  "زيت الأرجان المحمص للأكل": {
+    "base_price": 129.0,
+    "after_discount": 119.0,
+    "after_code": 109.0,
+    "base_discount_percent": 7.75,
+    "code_discount_percent": 8.4
+  },
+  "شامبو بزيت الأرجان (جميع الأنواع)": {
+    "base_price": 67.0,
+    "after_discount": 57.0,
+    "after_code": 47.0,
+    "base_discount_percent": 14.93,
+    "code_discount_percent": 17.54
+  },
+  "بلسم بزيت الأرجان (جميع الأنواع)": {
+    "base_price": 89.0,
+    "after_discount": 79.0,
+    "after_code": 69.0,
+    "base_discount_percent": 11.24,
+    "code_discount_percent": 12.66
+  },
+  "مقشر الجسم بزيت الأرجان وملح البحر": {
+    "base_price": 109.0,
+    "after_discount": 89.0,
+    "after_code": 79.0,
+    "base_discount_percent": 18.35,
+    "code_discount_percent": 11.24
+  },
+  "مقشر الجسم بزيت الأرجان والبرتقال والعسل": {
+    "base_price": 109.0,
+    "after_discount": 89.0,
+    "after_code": 79.0,
+    "base_discount_percent": 18.35,
+    "code_discount_percent": 11.24
+  },
+  "مقشر الجسم بزيت الأرجان والقهوة": {
+    "base_price": 99.0,
+    "after_discount": 89.0,
+    "after_code": 79.0,
+    "base_discount_percent": 10.1,
+    "code_discount_percent": 11.24
+  },
+  "مقشر الوجه بالنيلة": {
+    "base_price": 109.0,
+    "after_discount": 95.0,
+    "after_code": 89.0,
+    "base_discount_percent": 12.84,
+    "code_discount_percent": 6.32
+  },
+  "مقشر الوجه بالعكر": {
+    "base_price": 109.0,
+    "after_discount": NaN,
+    "after_code": 89.0,
+    "base_discount_percent": NaN,
+    "code_discount_percent": 0
+  },
+  "مقشر الوجه بالتين الشوكي 250 جرام": {
+    "base_price": 109.0,
+    "after_discount": 95.0,
+    "after_code": 89.0,
+    "base_discount_percent": 12.84,
+    "code_discount_percent": 6.32
+  },
+  "ماء الورد الطبيعي 250 مل": {
+    "base_price": 99.0,
+    "after_discount": 84.0,
+    "after_code": 74.0,
+    "base_discount_percent": 15.15,
+    "code_discount_percent": 11.9
+  },
+  "ماء الخزامى": {
+    "base_price": 59.0,
+    "after_discount": 52.0,
+    "after_code": 42.0,
+    "base_discount_percent": 11.86,
+    "code_discount_percent": 19.23
+  },
+  "ماء البرتقال": {
+    "base_price": 59.0,
+    "after_discount": 52.0,
+    "after_code": 42.0,
+    "base_discount_percent": 11.86,
+    "code_discount_percent": 19.23
+  },
+  "حجر النيلة المغربية 200 جرام": {
+    "base_price": 109.0,
+    "after_discount": 95.0,
+    "after_code": 79.0,
+    "base_discount_percent": 12.84,
+    "code_discount_percent": 16.84
+  },
+  "النيلة المطحونة 200 جرام": {
+    "base_price": 119.0,
+    "after_discount": 95.0,
+    "after_code": 89.0,
+    "base_discount_percent": 20.17,
+    "code_discount_percent": 6.32
+  },
+  "النيلة المطحونة 5 جرام": {
+    "base_price": 39.0,
+    "after_discount": 35.0,
+    "after_code": 25.0,
+    "base_discount_percent": 10.26,
+    "code_discount_percent": 28.57
+  },
+  "العكر الفاسي المغربي 5 جرام": {
+    "base_price": 85.0,
+    "after_discount": 75.0,
+    "after_code": 65.0,
+    "base_discount_percent": 11.76,
+    "code_discount_percent": 13.33
+  },
+  "العكر الفاسي 3 جرام": {
+    "base_price": 59.0,
+    "after_discount": 55.0,
+    "after_code": 45.0,
+    "base_discount_percent": 6.78,
+    "code_discount_percent": 18.18
+  },
+  "ليفة الجسم": {
+    "base_price": 35.0,
+    "after_discount": 27.0,
+    "after_code": 24.0,
+    "base_discount_percent": 22.86,
+    "code_discount_percent": 11.11
+  },
+  "ليفة الظهر": {
+    "base_price": 35.0,
+    "after_discount": 27.0,
+    "after_code": 24.0,
+    "base_discount_percent": 22.86,
+    "code_discount_percent": 11.11
+  },
+  "مدق النيلة": {
+    "base_price": 29.0,
+    "after_discount": 23.0,
+    "after_code": 19.0,
+    "base_discount_percent": 20.69,
+    "code_discount_percent": 17.39
+  },
+  "الصابون بالارجان 300 جرام": {
+    "base_price": 59.0,
+    "after_discount": 55.0,
+    "after_code": 45.0,
+    "base_discount_percent": 6.78,
+    "code_discount_percent": 18.18
+  },
+  "الصابون بالارجان والخزامى 300 جرام": {
+    "base_price": 65.0,
+    "after_discount": 59.0,
+    "after_code": 49.0,
+    "base_discount_percent": 9.23,
+    "code_discount_percent": 16.95
+  },
+  "الصابون بالارجان والمسك 300 جرام": {
+    "base_price": 65.0,
+    "after_discount": 59.0,
+    "after_code": 49.0,
+    "base_discount_percent": 9.23,
+    "code_discount_percent": 16.95
+  },
+  "زيت التين الشوكي 30 مل": {
+    "base_price": 129.0,
+    "after_discount": 95.0,
+    "after_code": 89.0,
+    "base_discount_percent": 26.36,
+    "code_discount_percent": 6.32
+  },
+  "زيت السمسم 1000 مل": {
+    "base_price": 39.0,
+    "after_discount": 35.0,
+    "after_code": 32.0,
+    "base_discount_percent": 10.26,
+    "code_discount_percent": 8.57
+  },
+  "زيت السمسم 500 مل": {
+    "base_price": 25.0,
+    "after_discount": 22.0,
+    "after_code": 19.0,
+    "base_discount_percent": 12.0,
+    "code_discount_percent": 13.64
+  },
+  "الزيت المغذي باكليل الجبل": {
+    "base_price": 119.0,
+    "after_discount": 95.0,
+    "after_code": 69.0,
+    "base_discount_percent": 20.17,
+    "code_discount_percent": 27.37
+  },
+  "سيروم الزيوت السبعة 120 مل": {
+    "base_price": 119.0,
+    "after_discount": 95.0,
+    "after_code": 69.0,
+    "base_discount_percent": 20.17,
+    "code_discount_percent": 27.37
+  },
+  "لوشن الجسم بالارجان": {
+    "base_price": 99.0,
+    "after_discount": 84.0,
+    "after_code": 74.0,
+    "base_discount_percent": 15.15,
+    "code_discount_percent": 11.9
+  },
+  "بلسم الجسم بالأرجان": {
+    "base_price": 99.0,
+    "after_discount": 95.0,
+    "after_code": 84.0,
+    "base_discount_percent": 4.04,
+    "code_discount_percent": 11.58
+  },
+  "كريم الجسم بالارجان": {
+    "base_price": 104.0,
+    "after_discount": 95.0,
+    "after_code": 89.0,
+    "base_discount_percent": 8.65,
+    "code_discount_percent": 6.32
+  },
+  "الطاجن الكبير": {
+    "base_price": 249.0,
+    "after_discount": 195.0,
+    "after_code": 190.0,
+    "base_discount_percent": 21.69,
+    "code_discount_percent": 2.56
+  },
+  "الطاجن الوسط": {
+    "base_price": 199.0,
+    "after_discount": 95.0,
+    "after_code": 90.0,
+    "base_discount_percent": 52.26,
+    "code_discount_percent": 5.26
+  },
+  "الطاجن الصغير": {
+    "base_price": 149.0,
+    "after_discount": 75.0,
+    "after_code": 70.0,
+    "base_discount_percent": 49.66,
+    "code_discount_percent": 6.67
+  },
+  "عبوات السفر": {
+    "base_price": 20.0,
+    "after_discount": 18.0,
+    "after_code": 15.0,
+    "base_discount_percent": 10.0,
+    "code_discount_percent": 16.67
+  },
+  "فرشاة الاظافر": {
+    "base_price": 19.0,
+    "after_discount": 15.0,
+    "after_code": 12.0,
+    "base_discount_percent": 21.05,
+    "code_discount_percent": 20.0
+  },
+  "فرشاة الشعر": {
+    "base_price": 24.0,
+    "after_discount": 19.0,
+    "after_code": 16.0,
+    "base_discount_percent": 20.83,
+    "code_discount_percent": 15.79
+  },
+  "عسل السدر 1000 جرام": {
+    "base_price": 129.0,
+    "after_discount": 95.0,
+    "after_code": 88.0,
+    "base_discount_percent": 26.36,
+    "code_discount_percent": 7.37
+  },
+  "عسل السدر 500 جرام": {
+    "base_price": 79.0,
+    "after_discount": 59.0,
+    "after_code": 49.0,
+    "base_discount_percent": 25.32,
+    "code_discount_percent": 16.95
+  },
+  "مجموعة النيلة": {
+    "base_price": 139.0,
+    "after_discount": 108.0,
+    "after_code": 98.0,
+    "base_discount_percent": 22.3,
+    "code_discount_percent": 9.26
+  }
 }
