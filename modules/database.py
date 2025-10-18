@@ -277,3 +277,63 @@ def get_all_orders() -> List[Dict]:
         st.error(f"خطأ في الحصول على الطلبات: {e}")
         return []
 
+
+
+
+def save_orders(orders: List[Dict]) -> bool:
+    """
+    حفظ أو تحديث الطلبات في قاعدة البيانات
+    
+    Args:
+        orders: قائمة من القواميس تحتوي على بيانات الطلبات
+    
+    Returns:
+        True إذا نجحت العملية، False إذا فشلت
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # إنشاء الجدول إذا لم يكن موجوداً
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS orders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                order_number TEXT UNIQUE,
+                customer_name TEXT,
+                phone TEXT,
+                city TEXT,
+                total_amount REAL,
+                status TEXT,
+                payment_method TEXT,
+                order_date TEXT
+            )
+        ''')
+        
+        # حفظ الطلبات
+        for order in orders:
+            cursor.execute('''
+                INSERT OR REPLACE INTO orders 
+                (order_number, customer_name, phone, city, total_amount, status, payment_method, order_date)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                order.get('رقم الطلب', ''),
+                order.get('اسم العميل', ''),
+                order.get('رقم الهاتف', ''),
+                order.get('المدينة', ''),
+                float(order.get('المبلغ الاجمالي', 0) or 0),
+                order.get('حالة الطلب', ''),
+                order.get(' طريقة الدفع', ''),  # مع المسافة
+                order.get('تاريخ الطلب', '')
+            ))
+        
+        conn.commit()
+        
+        # مسح الـ cache بعد التحديث
+        st.cache_data.clear()
+        
+        return True
+        
+    except Exception as e:
+        st.error(f"خطأ في حفظ الطلبات: {e}")
+        return False
+
