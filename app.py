@@ -2013,17 +2013,32 @@ def create_moraselaty_campaign():
         </div>
     """, unsafe_allow_html=True)
     
-    # تحميل بيانات العملاء من SQLite
+    # تحميل بيانات العملاء من SQLite أو JSON
     try:
+        # محاولة التحميل من SQLite أولاً
         from modules.database import get_all_orders
         from datetime import datetime as dt
         orders = get_all_orders()
         last_updated = dt.now().strftime("%Y-%m-%d")
     except Exception as e:
-        st.error(f"❌ خطأ في تحميل بيانات العملاء: {e}")
-        return
+        # إذا فشل، حاول التحميل من JSON
+        try:
+            import json
+            import os
+            if os.path.exists("moraselaty_customers.json"):
+                with open("moraselaty_customers.json", "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    orders = data.get("orders", [])
+                    last_updated = data.get("last_updated", datetime.datetime.now().strftime("%Y-%m-%d"))
+            else:
+                orders = []
+                last_updated = datetime.datetime.now().strftime("%Y-%m-%d")
+        except Exception as json_error:
+            st.error(f"❌ خطأ في تحميل بيانات العملاء: {json_error}")
+            orders = []
+            last_updated = datetime.datetime.now().strftime("%Y-%m-%d")
     
-    # إحصائيات سريعة
+    # إحصائيات سريعة (يتم تحديثها تلقائياً عند تحميل البيانات)
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric("📊 إجمالي الطلبات", f"{len(orders):,}")
@@ -2034,7 +2049,7 @@ def create_moraselaty_campaign():
         cities_count = len(set([o.get('المدينة', '') for o in orders if o.get('المدينة')]))
         st.metric("🏙️ عدد المدن", f"{cities_count}")
     with col4:
-        st.metric("📅 آخر تحديث", last_updated.split()[0])
+        st.metric("📅 آخر تحديث", last_updated.split()[0] if ' ' in last_updated else last_updated)
     
     st.markdown("---")
     
@@ -2179,6 +2194,9 @@ def create_moraselaty_campaign():
             st.success(f"✅ تم العثور على {len(filtered_orders)} عميل مطابق للفلاتر!")
         
         # عرض النتائج
+        # تهيئة متغير filtered لتجنب UnboundLocalError
+        filtered = []
+        
         if hasattr(st.session_state, 'filtered_customers') and st.session_state.filtered_customers:
             filtered = st.session_state.filtered_customers
             
@@ -2202,8 +2220,16 @@ def create_moraselaty_campaign():
             
             # عرض الجدول
             with st.expander("👁️ عرض تفاصيل العملاء"):
-                df_filtered = pd.DataFrame(filtered)
-                st.dataframe(df_filtered[['اسم العميل', 'رقم الهاتف', 'المدينة', 'المبلغ الاجمالي', 'حالة الطلب', ' طريقة الدفع']])
+                if filtered:  # التحقق من وجود بيانات قبل إنشاء DataFrame
+                    df_filtered = pd.DataFrame(filtered)
+                    # التحقق من وجود الأعمدة المطلوبة
+                    available_cols = [col for col in ['اسم العميل', 'رقم الهاتف', 'المدينة', 'المبلغ الاجمالي', 'حالة الطلب', ' طريقة الدفع'] if col in df_filtered.columns]
+                    if available_cols:
+                        st.dataframe(df_filtered[available_cols])
+                    else:
+                        st.dataframe(df_filtered)
+                else:
+                    st.info("لا توجد بيانات لعرضها")
             
             # حفظ الحملة
             st.markdown("---")
