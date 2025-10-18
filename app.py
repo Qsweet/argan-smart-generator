@@ -2005,6 +2005,7 @@ def monthly_revenue_tracking():
 def create_moraselaty_campaign():
     import json
     import os
+    import pandas as pd
     
     load_custom_css()
     
@@ -2065,7 +2066,6 @@ def create_moraselaty_campaign():
         
         if uploaded_file:
             try:
-                import pandas as pd
                 df_new = pd.read_excel(uploaded_file)
                 
                 st.success(f"✅ تم قراءة {len(df_new)} طلب من الملف")
@@ -2083,7 +2083,7 @@ def create_moraselaty_campaign():
                     df_unique = df_all.drop_duplicates(subset=['رقم الطلب'], keep='first')
                     df_unique = df_unique.fillna("")
                     
-                    # حفظ
+                    # حفظ في JSON
                     customers_data_new = {
                         "last_updated": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         "total_orders": len(df_unique),
@@ -2092,6 +2092,14 @@ def create_moraselaty_campaign():
                     
                     with open("moraselaty_customers.json", "w", encoding="utf-8") as f:
                         json.dump(customers_data_new, f, ensure_ascii=False, indent=2)
+                    
+                    # حفظ في SQLite أيضاً
+                    try:
+                        from modules.database import save_orders
+                        save_orders(df_unique.to_dict('records'))
+                    except Exception as db_error:
+                        # إذا فشل الحفظ في SQLite، لا بأس لأن البيانات محفوظة في JSON
+                        pass
                     
                     st.success(f"✅ تم الدمج بنجاح! الإجمالي الآن: {len(df_unique)} طلب")
                     st.rerun()
