@@ -1818,7 +1818,7 @@ def monthly_revenue_tracking():
             if st.button("💾 حفظ الشهر الجديد", use_container_width=True, type="primary"):
                 revenue_data[new_month_name] = {
                     "month_name": new_month_name,
-                    "last_update": datetime.now().strftime("%Y-%m-%d"),
+                    "last_update": datetime.datetime.now().strftime("%Y-%m-%d"),
                     "expenses": expenses,
                     "revenues": revenues
                 }
@@ -1927,7 +1927,7 @@ def monthly_revenue_tracking():
                     if st.button("💾 حفظ التعديلات", use_container_width=True, type="primary"):
                         revenue_data[selected_month] = {
                             "month_name": selected_month,
-                            "last_update": datetime.now().strftime("%Y-%m-%d"),
+                            "last_update": datetime.datetime.now().strftime("%Y-%m-%d"),
                             "expenses": expenses_to_keep,
                             "revenues": revenues_to_keep
                         }
@@ -2068,7 +2068,7 @@ def create_moraselaty_campaign():
                     
                     # حفظ
                     customers_data_new = {
-                        "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "last_updated": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         "total_orders": len(df_unique),
                         "orders": df_unique.to_dict('records')
                     }
@@ -2229,7 +2229,7 @@ def create_moraselaty_campaign():
                     new_campaign = {
                         "id": len(campaigns_data["campaigns"]) + 1,
                         "name": campaign_name,
-                        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "created_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         "created_by": st.session_state.username,
                         "message": campaign_message,
                         "filters": {
@@ -2456,8 +2456,8 @@ def create_moraselaty_campaign():
                     
                     new_campaign = {
                         "id": len(campaigns_data["campaigns"]) + 1,
-                        "name": f"حملة تسويقية - {datetime.now().strftime('%Y-%m-%d')}",
-                        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "name": f"حملة تسويقية - {datetime.datetime.now().strftime('%Y-%m-%d')}",
+                        "created_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         "created_by": st.session_state.get('username', 'مجهول'),
                         "type": "marketing",
                         "products": st.session_state.get('marketing_products', []),
